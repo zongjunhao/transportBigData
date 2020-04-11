@@ -13,6 +13,24 @@ public class Init {
         cleanedData.show();
     }
 
+    public Dataset<Row> getCleanedData(SparkSession spark){
+        spark.read().format("csv").option("header","true").load("in/服创大赛-原始数据.csv").createOrReplaceTempView("raw_data");
+        /**
+         * sql语句内容
+         * select timestamp,imsi,lac_id,cell_id
+         * from raw_data
+         * where imsi is not null
+         * and lac_id is not null
+         * and cell_id is not null
+         * and imsi not like "%#%"
+         * and imsi not like "%*%"
+         * and imsi not like "%^%"
+         */
+        Dataset<Row> cleanedData = spark.sql("select timestamp,imsi,lac_id,cell_id from raw_data " +
+                "where imsi is not null and lac_id is not null and cell_id is not null " +
+                "and imsi not like \"%#%\" and imsi not like \"%*%\" and imsi not like \"%^%\"");
+        return cleanedData;
+    }
     /**
      *  初始化数据
      *  1. 对原始数据进行数据清洗
