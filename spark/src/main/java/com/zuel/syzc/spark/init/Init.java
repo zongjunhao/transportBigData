@@ -9,11 +9,16 @@ public class Init {
     public static void main(String[] args) {
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-        Dataset<Row> cleanedData = new Init().init(spark);
+        Dataset<Row> cleanedData = new Init(spark).init();
         cleanedData.show();
     }
+    private SparkSession spark;
 
-    public Dataset<Row> getCleanedData(SparkSession spark){
+    public Init(SparkSession spark){
+        this.spark = spark;
+    }
+
+    public Dataset<Row> getCleanedData(){
         spark.read().format("csv").option("header","true").load("in/服创大赛-原始数据.csv").createOrReplaceTempView("raw_data");
         /**
          * sql语句内容
@@ -35,10 +40,9 @@ public class Init {
      *  初始化数据
      *  1. 对原始数据进行数据清洗
      *  2. 将清洗后数据与基站经纬度数据进行合并
-     * @param spark sparkSession
      * @return 进行清洗和合并以后的数据表
      */
-    public Dataset<Row> init(SparkSession spark){
+    public Dataset<Row> init(){
         spark.read().format("csv").option("header","true").load("in/服创大赛-原始数据.csv").createOrReplaceTempView("raw_data");
 //    spark.sql("select * from raw_data").show()
         spark.read().format("csv").option("header","true").load("in/服创大赛-基站经纬度数据.csv").createOrReplaceTempView("longitude");

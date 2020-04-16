@@ -5,7 +5,6 @@ import com.zuel.syzc.spark.kit.GetCells;
 import com.zuel.syzc.spark.kit.Point;
 import com.zuel.syzc.spark.util.DateUtil;
 import org.apache.commons.collections.IteratorUtils;
-import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -13,12 +12,14 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.util.LongAccumulator;
 import scala.Serializable;
 import scala.Tuple2;
 
 import java.util.*;
 
-public class crowdDensity {
+public class CrowdDensity {
+    private GetCells getCells;
 
     public static void main(String[] args) {
         // spark配置文件
@@ -26,7 +27,7 @@ public class crowdDensity {
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         // 调用算法,计算在某个原型区域内的流入流出人数
-        String crowdFlow = new crowdDensity().crowdInflowAndOutflow(spark, "2018-10-02-09", "2018-10-03-12", 123.4159698, 41.80778122, 1000);
+        String crowdFlow = new CrowdDensity().crowdInflowAndOutflow(spark, "2018-10-02-09", "2018-10-03-12", 123.4159698, 41.80778122, 1000);
         System.out.println(crowdFlow);
         // 计算在某个指定多边形区域内的流入流出人数
         List<Point> points = new ArrayList<>();
@@ -36,7 +37,7 @@ public class crowdDensity {
         points.add(new Point(1, 2));
         points.add(new Point(0, 2));
         points.add(new Point(1, 1));
-        String crowdInOutFlow = new crowdDensity().crowdInflowAndOutflow(spark, "2018-10-02-09", "2018-10-03-12", points);
+        String crowdInOutFlow = new CrowdDensity().crowdInflowAndOutflow(spark, "2018-10-02-09", "2018-10-03-12", points);
         System.out.println(crowdInOutFlow);
     }
 
@@ -49,10 +50,11 @@ public class crowdDensity {
      * @return 输入人口数和输出人口数
      */
     public String crowdInflowAndOutflow(SparkSession spark, String startTime,String endTime,List<Point> points) {
+        getCells = new GetCells();
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
         // 获取在某个区域内的基站Id，返回的是List(CellId,flag)
-        JavaPairRDD<String, Integer> cellListRdd = sc.parallelizePairs(new GetCells().getCellsInPolygon(points));
+        JavaPairRDD<String, Integer> cellListRdd = sc.parallelizePairs(getCells.getCellsInPolygon(points));
         String result = calculateInflowAndOutFlow(spark, startTime, endTime, cellListRdd);
         return result;
     }
@@ -68,10 +70,11 @@ public class crowdDensity {
      * @return 输入人口量和输出人口量
      */
     public String crowdInflowAndOutflow(SparkSession spark, String startTime,String endTime,double longitude, double latitude, double radius) {
+        getCells = new GetCells();
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
         // 获取在某个区域内的基站Id，返回的是List(CellId,flag)
-        JavaPairRDD<String, Integer> cellListRdd = sc.parallelizePairs(new GetCells().getCellsInCircle(longitude,latitude,radius));
+        JavaPairRDD<String, Integer> cellListRdd = sc.parallelizePairs(getCells.getCellsInCircle(longitude,latitude,radius));
         String result = calculateInflowAndOutFlow(spark, startTime, endTime, cellListRdd);
         return result;
     }
@@ -88,7 +91,7 @@ public class crowdDensity {
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
         // 获取清洗后的数据集
-        Dataset<Row> cleanedData = new Init().getCleanedData(spark);
+        Dataset<Row> cleanedData = new Init(spark).getCleanedData();
         // 将DataSet转化为Rdd
         JavaRDD<Row> cleanedJavaRdd = cleanedData.javaRDD();
         // 使用filter算子筛选出在指定时间内所有人活动的数据
@@ -117,8 +120,8 @@ public class crowdDensity {
             return new Tuple2<>(userId, new Tuple2(time, flag));
         });
         // 设置累加器，计算人口流入量和流出量
-        Accumulator<Integer> inflow = sc.accumulator(0);
-        Accumulator<Integer> outflow = sc.accumulator(0);
+        LongAccumulator inflow = sc.sc().longAccumulator("inflow");
+        LongAccumulator outflow = sc.sc().longAccumulator("outflow");
         // groupByKey算子将用户数据key(userId)分类，返回(userId,Iterator<values>)
         userPlaceRdd.groupByKey().foreach(row -> {
             Iterator<Tuple2> iterator = row._2.iterator();
@@ -146,10 +149,5 @@ public class crowdDensity {
 
 
 
-class TimeComparator implements Comparator<Tuple2<Long, Integer>>, Serializable {
 
-    @Override
-    public int compare(Tuple2<Long, Integer> o1, Tuple2<Long, Integer> o2) {
-        return o1._1>o2._1?1:-1;
-    }
-}
+
