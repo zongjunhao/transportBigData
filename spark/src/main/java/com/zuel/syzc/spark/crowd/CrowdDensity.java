@@ -2,7 +2,7 @@ package com.zuel.syzc.spark.crowd;
 
 import com.zuel.syzc.spark.init.Init;
 import com.zuel.syzc.spark.kit.GetCells;
-import com.zuel.syzc.spark.kit.Point;
+import com.zuel.syzc.spark.kit.BaseStationPoint;
 import com.zuel.syzc.spark.util.DateUtil;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.spark.SparkConf;
@@ -13,7 +13,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.util.LongAccumulator;
-import scala.Serializable;
 import scala.Tuple2;
 
 import java.util.*;
@@ -30,13 +29,13 @@ public class CrowdDensity {
         String crowdFlow = new CrowdDensity().crowdInflowAndOutflow(spark, "2018-10-02-09", "2018-10-03-12", 123.4159698, 41.80778122, 1000);
         System.out.println(crowdFlow);
         // 计算在某个指定多边形区域内的流入流出人数
-        List<Point> points = new ArrayList<>();
-        points.add(new Point(0, 0));
-        points.add(new Point(1, 0));
-        points.add(new Point(2, 1));
-        points.add(new Point(1, 2));
-        points.add(new Point(0, 2));
-        points.add(new Point(1, 1));
+        List<BaseStationPoint> points = new ArrayList<>();
+        points.add(new BaseStationPoint(0, 0));
+        points.add(new BaseStationPoint(1, 0));
+        points.add(new BaseStationPoint(2, 1));
+        points.add(new BaseStationPoint(1, 2));
+        points.add(new BaseStationPoint(0, 2));
+        points.add(new BaseStationPoint(1, 1));
         String crowdInOutFlow = new CrowdDensity().crowdInflowAndOutflow(spark, "2018-10-02-09", "2018-10-03-12", points);
         System.out.println(crowdInOutFlow);
     }
@@ -49,7 +48,7 @@ public class CrowdDensity {
      * @param points 自定义多边形的顶点
      * @return 输入人口数和输出人口数
      */
-    public String crowdInflowAndOutflow(SparkSession spark, String startTime,String endTime,List<Point> points) {
+    public String crowdInflowAndOutflow(SparkSession spark, String startTime,String endTime,List<BaseStationPoint> points) {
         getCells = new GetCells();
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());

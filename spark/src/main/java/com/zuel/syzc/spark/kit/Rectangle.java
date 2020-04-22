@@ -4,6 +4,7 @@ import java.util.List;
 
 /**
  * 不规则多边形的外包矩形，初步过滤不在矩形内的点
+ * @author zongjunhao
  */
 public class Rectangle {
     private double top;
@@ -16,16 +17,20 @@ public class Rectangle {
      *
      * @param points 多边形顶点
      */
-    public Rectangle(List<Point> points) {
-        for (Point point : points) {
-            if (point.getLatitude() > top)
+    public Rectangle(List<BaseStationPoint> points) {
+        for (BaseStationPoint point : points) {
+            if (point.getLatitude() > top) {
                 top = point.getLatitude();
-            if (point.getLatitude() < bottom)
+            }
+            if (point.getLatitude() < bottom) {
                 bottom = point.getLatitude();
-            if (point.getLongitude() < left)
+            }
+            if (point.getLongitude() < left) {
                 left = point.getLongitude();
-            if (point.getLongitude() > right)
+            }
+            if (point.getLongitude() > right) {
                 right = point.getLongitude();
+            }
         }
     }
 
@@ -35,7 +40,7 @@ public class Rectangle {
      * @param point 要判断的点
      * @return 是否在矩形内
      */
-    public boolean isPointInRectangle(Point point) {
+    public boolean isPointInRectangle(BaseStationPoint point) {
         return bottom < point.getLatitude() && top > point.getLatitude()
                 && left < point.getLongitude() && right > point.getLongitude();
     }
