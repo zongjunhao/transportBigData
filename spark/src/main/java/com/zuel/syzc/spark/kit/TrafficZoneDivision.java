@@ -1,6 +1,7 @@
 package com.zuel.syzc.spark.kit;
 
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.mllib.clustering.KMeans;
 import org.apache.spark.mllib.clustering.KMeansModel;
@@ -23,16 +24,14 @@ import scala.Tuple2;
 @SuppressWarnings("unused")
 public class TrafficZoneDivision {
 
-    public JavaRDD<Tuple2<String, Integer>> divisionTrafficZoneByKmeans() {
+    public JavaPairRDD<String, Integer> divisionTrafficZoneByKmeans() {
         // spark配置文件
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
 
         // Loads data.
-        spark.read().format("csv").option("header", "true").load("in/服创大赛-基站经纬度数据.csv").createOrReplaceTempView("longitude");
-        Dataset<Row> dataset = spark.sql("select * from longitude");
-        JavaRDD<Row> data = dataset.toJavaRDD();
+        JavaRDD<Row> data = spark.read().format("csv").option("header", "true").load("in/服创大赛-基站经纬度数据.csv").toJavaRDD();
 
         JavaRDD<Vector> parsedData = data.map(row -> {
             double[] values = new double[2];
@@ -59,7 +58,7 @@ public class TrafficZoneDivision {
         double withinSetSumOfSquaredErrors = clusters.computeCost(parsedData.rdd());
         System.out.println("Within Set Sum of Squared Errors = " + withinSetSumOfSquaredErrors);
 
-        JavaRDD<Tuple2<String, Integer>> result = data.map(row -> {
+        JavaPairRDD<String, Integer> result = data.mapToPair(row -> {
             double[] values = new double[2];
             values[0] = Double.parseDouble(row.getString(0));
             values[1] = Double.parseDouble(row.getString(1));
@@ -101,7 +100,7 @@ public class TrafficZoneDivision {
 
     public static void main(String[] args) {
         TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision();
-        JavaRDD<Tuple2<String, Integer>> result = trafficZoneDivision.divisionTrafficZoneByKmeans();
+        JavaPairRDD<String, Integer> result = trafficZoneDivision.divisionTrafficZoneByKmeans();
         result.collect().forEach(System.out::println);
     }
 }
