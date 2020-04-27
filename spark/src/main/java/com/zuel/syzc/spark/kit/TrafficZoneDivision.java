@@ -1,5 +1,6 @@
 package com.zuel.syzc.spark.kit;
 
+import com.zuel.syzc.spark.constant.Constant;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -42,7 +43,7 @@ public class TrafficZoneDivision {
         parsedData.cache();
 
         // 聚类数目
-        int numClusters = 200;
+        int numClusters = Constant.ZOOM_NUM;
         // 迭代次数
         int numIterations = 20;
         KMeansModel clusters = KMeans.train(parsedData.rdd(), numClusters, numIterations);
