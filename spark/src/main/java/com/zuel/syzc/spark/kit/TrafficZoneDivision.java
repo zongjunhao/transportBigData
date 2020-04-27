@@ -15,21 +15,22 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.junit.Test;
+import scala.Tuple2;
 
 /**
  * @author zongjunhao
  */
 @SuppressWarnings("unused")
 public class TrafficZoneDivision {
-    @Test
-    public void divisionTrafficZoneByKmeans() {
+
+    public JavaRDD<Tuple2<String, Integer>> divisionTrafficZoneByKmeans() {
         // spark配置文件
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
 
         // Loads data.
-        spark.read().format("csv").option("header", "true").load("../in/服创大赛-基站经纬度数据.csv").createOrReplaceTempView("longitude");
+        spark.read().format("csv").option("header", "true").load("in/服创大赛-基站经纬度数据.csv").createOrReplaceTempView("longitude");
         Dataset<Row> dataset = spark.sql("select * from longitude");
         JavaRDD<Row> data = dataset.toJavaRDD();
 
@@ -58,7 +59,17 @@ public class TrafficZoneDivision {
         double withinSetSumOfSquaredErrors = clusters.computeCost(parsedData.rdd());
         System.out.println("Within Set Sum of Squared Errors = " + withinSetSumOfSquaredErrors);
 
+        JavaRDD<Tuple2<String, Integer>> result = data.map(row -> {
+            double[] values = new double[2];
+            values[0] = Double.parseDouble(row.getString(0));
+            values[1] = Double.parseDouble(row.getString(1));
+            Integer predictResult = clusters.predict(Vectors.dense(values));
+            return new Tuple2<>(row.getString(2), predictResult);
+        });
+        result.collect().forEach(System.out::println);
+        return result;
 
+        /*
         JavaRDD<Row> result = data.map(row -> {
             double[] values = new double[2];
             values[0] = Double.parseDouble(row.getString(0));
@@ -83,5 +94,14 @@ public class TrafficZoneDivision {
         Dataset<Row> resultDataset = spark.createDataFrame(result, schema);
         resultDataset.show();
         resultDataset.write().option("header", "true").csv("target/org/apache/spark/station_zone");
+
+         */
+
+    }
+
+    public static void main(String[] args) {
+        TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision();
+        JavaRDD<Tuple2<String, Integer>> result = trafficZoneDivision.divisionTrafficZoneByKmeans();
+        result.collect().forEach(System.out::println);
     }
 }
