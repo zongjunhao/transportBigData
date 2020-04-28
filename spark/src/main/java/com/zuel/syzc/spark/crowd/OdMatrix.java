@@ -1,7 +1,10 @@
 package com.zuel.syzc.spark.crowd;
 
+import com.zuel.syzc.spark.constant.Constant;
 import com.zuel.syzc.spark.init.Init;
+import com.zuel.syzc.spark.kit.TrafficZoneDivision;
 import com.zuel.syzc.spark.util.DateUtil;
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -10,6 +13,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import scala.Tuple2;
 import scala.Tuple3;
+import scala.Tuple4;
+import scala.Tuple5;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -40,12 +45,24 @@ public class OdMatrix {
         }
     }
 
-    // 初始化数据
+    /**
+     * 计算od矩阵
+     * 1. 获取一段时间内的用户数据
+     * 2. 将用户轨迹点与划分的轨迹切分路径区分
+     * 4. 计算Od矩阵
+     * @param spark spark上下文对象
+     * @param startTime
+     * @param endTime
+     * @return
+     */
     public int[][] odCalculate(SparkSession spark, String startTime,String endTime){
+        TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision();
+        JavaPairRDD<String, Integer> mapCommunityRdd = trafficZoneDivision.divisionTrafficZoneByKmeans(spark);
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
-        int communityNumber = 8;
-        JavaRDD<Row> cleanedRdd = new Init(spark).init() // 获取初始数据
+        int communityNumber = Constant.ZOOM_NUM;
+        // 获取初始数据
+        JavaRDD<Row> cleanedRdd = new Init(spark).init()
                 .javaRDD() // 转化为RDD
                 .filter(row->{ // 筛选出特定时间段内的数据
                     long time = Long.parseLong((String) row.get(0));
@@ -55,39 +72,30 @@ public class OdMatrix {
                         return false;
                     }
                 });
-        //timestamp,imsi,place.lac_id,place.cell_id,longitude,latitude
-        // 将数据转化为(userId,(time,longitude,latitude))的形式
-        // 然后将数据根据key(userId)聚合
-        JavaPairRDD<String, Iterable<Tuple3<Long, Double, Double>>> groupedUserRdd = cleanedRdd.mapToPair(row -> { // 将数据转化为(userId,(time,longitude,latitude))的形式
+        // 将清洗后的数据转化格式(cellId,(userId,time))，和经过分区后的数据(cellId, communityId)合并
+        // 得到的数据格式为(cellId,((userId,time),communityId))
+        JavaPairRDD<String, Tuple2<Tuple2<String, Long>, Integer>> joinedRdd = cleanedRdd.mapToPair(row -> {
             long time = Long.parseLong((String) row.get(0));
             String userId = row.getString(1);
-            Double longitude = Double.parseDouble((String) row.get(4));
-            Double latitude = Double.parseDouble((String) row.get(5));
-            return new Tuple2<>(userId, new Tuple3<>(time, longitude, latitude));
+            String cellId = row.getString(3);
+            return new Tuple2<>(cellId, new Tuple2<>(userId, time));
+        }).join(mapCommunityRdd);
+        // 将数据再次转化格式为(userId,(time,communityId))，然后根据userId分组
+        JavaPairRDD<String, Iterable<Tuple2<Long, Integer>>> userCommunityRdd = joinedRdd.mapToPair(row -> {
+            //(userId,(time,communityId))
+            return new Tuple2<>(row._2._1()._1(), new Tuple2<>(row._2._1()._2(), row._2._2()));
         }).groupByKey();
-        // 将数据根据key(userId)聚合，然后将驻留点与小区进行匹配，返回(userId,List<(time,communityId)>)形式
-        JavaPairRDD<String, List<Tuple2<Long, Integer>>> userCommunityRdd = groupedUserRdd.mapToPair(row -> {
-            String userId = row._1;
-            Iterator<Tuple3<Long, Double, Double>> iterator = row._2.iterator();
-            List<Tuple2<Long, Integer>> timeCommunityList = new ArrayList<>();
-            while (iterator.hasNext()){
-                Tuple3<Long, Double, Double> index = iterator.next();
-                int k = (int) ((index._2() + index._3() + Math.random() * 10) % (communityNumber+1))-1; // 根据经纬度模拟小区
-                timeCommunityList.add(new Tuple2<>(index._1(), k));  // list里的格式为(time,communityId)
-//                System.out.println(userId+"---");
-            }
-            return new Tuple2<>(userId, timeCommunityList);
-        });
         // 将用户的出行数据根据划分为一个一个的出行段(userId,List<startCommunityId,endCommunityId>)
         JavaPairRDD<String, List<Tuple2<Integer, Integer>>> userOdRdd = userCommunityRdd.mapToPair(row -> {
             String userId = row._1;
-            List<Tuple2<Long, Integer>> timeCommunityList = row._2();
+            List<Tuple2<Long, Integer>> timeCommunityList = IteratorUtils.toList(row._2.iterator());
+//            List<Tuple2<Long, Integer>> timeCommunityList = row._2();
             timeCommunityList.sort(new TimeComparator()); // 根据时间排序
             Integer communityTemp = null;
             List<Tuple2<Integer, Integer>> userOdList = new ArrayList<>();
             // 将用户出行根据起始点划分为出行list，list内容为（起始小区id，结束小区id）
             for (Tuple2<Long, Integer> index : timeCommunityList) {
-                if (communityTemp == null) {
+                if (communityTemp == null) { // 如果是第一个点
                     communityTemp = index._2;
                 } else {
                     userOdList.add(new Tuple2<>(communityTemp, index._2));

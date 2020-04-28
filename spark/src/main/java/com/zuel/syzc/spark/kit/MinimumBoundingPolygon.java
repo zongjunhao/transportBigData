@@ -26,6 +26,11 @@ import java.util.List;
  */
 public class MinimumBoundingPolygon {
 
+    /**
+     * 边界查找入口
+     * @param ps 散点列表
+     * @return 边界点列表
+     */
     public static LinkedList<BaseStationPoint> findSmallestPolygon(List<BaseStationPoint> ps) {
         if (null == ps || ps.isEmpty()) {
             return null;

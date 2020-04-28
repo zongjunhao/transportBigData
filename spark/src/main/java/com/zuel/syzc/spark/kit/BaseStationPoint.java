@@ -4,6 +4,7 @@ package com.zuel.syzc.spark.kit;
  * 基站点
  * @author zongjunhao
  */
+@SuppressWarnings("unused")
 public class BaseStationPoint {
     private double longitude;
     private double latitude;
