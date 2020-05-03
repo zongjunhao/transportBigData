@@ -43,6 +43,12 @@ public class DateUtil {
         return sf.format(time);
     }
 
+    public static long setUniqueData(Long time){
+        sf = new SimpleDateFormat("yyyy-MM-dd-HH");
+        sf.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
+        return getDayHour(sf.format(time));
+    }
+
     /**
      * 将某一天时间转化为时间戳
      * yyyy-MM-dd

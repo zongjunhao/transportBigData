@@ -1,5 +1,7 @@
 package com.zuel.syzc.spark.data;
 
+import com.zuel.syzc.spark.util.DateUtil;
+
 public class LocationUtils {
 
     private static double EARTH_RADIUS = 6378.137;
@@ -32,9 +34,19 @@ public class LocationUtils {
     }
 
     public static void main(String[] args) {
-        double distance = getDistance(31.12055, 131.717594,
-                21.090867, 111.817629);
+        /**
+         * |1538481509242|460000095007329090| 16789|67567924|123.4159698|41.80778122|
+         * |1538526105074|460000095007329090| 16789|67200820|123.4396362|41.80488968|
+         */
+        double distance = getDistance(41.80778122, 123.4159698,
+                41.80488968, 123.4396362);
         System.out.println("距离" + distance + "米");
+        long minus = 1538526105074L-1538481509242L;
+        System.out.println(DateUtil.getDateFormat(1538526105074L));
+        System.out.println(DateUtil.getDateFormat(1538481509242L));
+        System.out.println(minus/(60 * 60 * 1000));
+        System.out.println(distance/1000);
+        System.out.println(distance/minus*60*60);
     }
 
 }
