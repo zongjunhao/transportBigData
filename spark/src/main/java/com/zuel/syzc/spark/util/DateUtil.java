@@ -43,6 +43,12 @@ public class DateUtil {
         return sf.format(time);
     }
 
+    public static String getDateFormatHour(Long time){
+        sf = new SimpleDateFormat("yyyy-MM-dd-HH");
+        sf.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
+        return sf.format(time);
+    }
+
     public static long setUniqueData(Long time){
         sf = new SimpleDateFormat("yyyy-MM-dd-HH");
         sf.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
