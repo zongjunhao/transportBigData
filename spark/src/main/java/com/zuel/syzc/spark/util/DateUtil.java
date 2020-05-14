@@ -1,12 +1,37 @@
 package com.zuel.syzc.spark.util;
 
+import com.zuel.syzc.spark.crowd.UnusualCrowdDensity;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
 public class DateUtil {
     private static SimpleDateFormat sf = null;
+
+    public static void main(String[] args) {
+//        System.out.println(getDay(DateUtil.getDateFormat(1538544930607L)));
+//        System.out.println(getDateFormat(DateUtil.getDay(DateUtil.getDateFormat(1538544930607L))));
+//        System.out.println(getDay(1538544930607L));
+//        System.out.println(getDateFormat(1538544930607L));
+//        System.out.println(setUniqueData(1538544930607L));
+//        System.out.println(getDateFormat(setUniqueData(1538544930607L)));
+        long startDay = DateUtil.getTimestamp("2018-10-02 18:00:00.000");
+        long endDay = DateUtil.getTimestamp("2018-10-03 23:00:00.000");
+        long interval = 24 * 60 * 60 * 1000;
+        long temp = startDay;
+        while (temp<endDay){
+            System.out.println(getDateFormat(temp)+"--"+getDateFormat(temp+interval));
+//            System.out.println();
+            temp += interval;
+        }
+//        do {
+//            System.out.println(getDateFormat(temp));
+//            temp += interval;
+//        }while (temp<endDay);
+    }
 
     /**
      * 获取系统时间
@@ -49,6 +74,11 @@ public class DateUtil {
         return sf.format(time);
     }
 
+    /**
+     * 获取当前整点时间
+     * @param time 时间戳
+     * @return
+     */
     public static long setUniqueData(Long time){
         sf = new SimpleDateFormat("yyyy-MM-dd-HH");
         sf.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
@@ -71,6 +101,12 @@ public class DateUtil {
             e.printStackTrace();
         }
         return date.getTime();
+    }
+
+    public static String getDay(long time){
+        sf = new SimpleDateFormat("yyyy-MM-dd");
+        sf.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
+        return sf.format(time);
     }
 
     /**
@@ -107,6 +143,24 @@ public class DateUtil {
             e.printStackTrace();
         }
         return date.getTime();
+    }
+
+    /**
+     * 获取时间戳的日期
+     * @param time
+     * @return
+     */
+    public static int getWeek(long time){
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+8:00"));
+        calendar.setTime(new Date(time));
+        // 1星期日 2一 3二 4三 5四 6五 7六
+        return calendar.get(Calendar.DAY_OF_WEEK);
+    }
+
+    public static int getHour(long time){
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+8:00"));
+        calendar.setTime(new Date(time));
+        return calendar.get(Calendar.HOUR_OF_DAY);
     }
 
     public static boolean isAfter(String time1,String time2) {
