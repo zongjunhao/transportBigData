@@ -1,4 +1,4 @@
-package com.zuel.syzc.spark.data;
+package com.zuel.syzc.spark.util;
 
 import com.zuel.syzc.spark.util.DateUtil;
 

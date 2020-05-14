@@ -1,4 +1,4 @@
-package com.zuel.syzc.spark.data;
+package com.zuel.syzc.spark.test;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;

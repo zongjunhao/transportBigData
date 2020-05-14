@@ -1,9 +1,9 @@
-package com.zuel.syzc.spark.data;
+package com.zuel.syzc.spark.init;
 
 import com.zuel.syzc.spark.constant.Constant;
 import com.zuel.syzc.spark.crowd.FourTupleTimeComparator;
-import com.zuel.syzc.spark.init.Init;
 import com.zuel.syzc.spark.util.DateUtil;
+import com.zuel.syzc.spark.util.LocationUtils;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -12,12 +12,13 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import scala.Tuple2;
 import scala.Tuple4;
+import scala.Tuple5;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -115,12 +116,11 @@ public class CleanErraticData {
     }
 
     /**
-     * 根据小时填充数据
-     * @return 填充后的数据
-     * JavaRDD<Tuple4<imsi, timestamp, longitude, latitude>>
+     * 填充数据
+     * @return imsi,timestamp, cellId,  longitude, latitude
      */
-    public Dataset<Row> getFilledData(){
-//        Init initData = new Init(spark);
+    public JavaRDD<Tuple5<String, Long,String, String, String>> getFilledRdd(){
+        //        Init initData = new Init(spark);
 //        JavaRDD<Row> cleanedRdd = initData.getCleanedData().toJavaRDD();
 //        JavaPairRDD<String, Iterable<Tuple3<Long, String, String>>> userTimeRdd = cleanedRdd.mapToPair(row -> {//timestamp,imsi,lac_id,cell_id
 //            long time = Long.parseLong((String) row.get(0));
@@ -130,7 +130,7 @@ public class CleanErraticData {
 //            return new Tuple2<>(userId, new Tuple3<>(time, lacId, cellId));
 //        }).groupByKey();
         JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedDataRdd = cleanErraticData();
-        JavaRDD<Tuple4<String, Long, String, String>> filledRdd = cleanedDataRdd.map(row -> {
+        JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = cleanedDataRdd.map(row -> {
             String userId = row._1;
             List<Tuple4<Long, String, String, String>> trackList = row._2;
 //            List<Tuple3<Long, String, String>> trackList = IteratorUtils.toList(row._2.iterator());
@@ -138,32 +138,53 @@ public class CleanErraticData {
             long interval = Constant.INSERT_TIME_INTERVAL;// 时间切片间隔一个小时
             Long startTime = DateUtil.setUniqueData(trackList.get(0)._1());
             Long endTime = startTime + interval;
-            List<Tuple4<String, Long, String, String>> finalList = new ArrayList<>();
+            List<Tuple5<String, Long,String, String, String>> finalList = new ArrayList<>();
             for (int i = 0; i < trackList.size(); ) {
                 if (startTime < trackList.get(i)._1() && endTime > trackList.get(i)._1()) {// 如果这个数据在这个时间点内
-                    finalList.add(new Tuple4<>(userId, trackList.get(i)._1(), trackList.get(i)._3(), trackList.get(i)._4())); // 添加这个数据
+                    finalList.add(new Tuple5<>(userId, trackList.get(i)._1(),trackList.get(i)._2(), trackList.get(i)._3(), trackList.get(i)._4())); // 添加这个数据
                     i++;
                 } else if (endTime < trackList.get(i)._1()) { // 如果这个时间段里没有这个数据,补充数据
                     startTime += interval;
                     endTime += interval;
                     if ((i<trackList.size()-1)&&trackList.get(i+1)!=null && trackList.get(i+1)._1()>endTime)
-                        finalList.add(new Tuple4<>(userId, startTime, trackList.get(i - 1)._3(), trackList.get(i - 1)._4()));
+                        finalList.add(new Tuple5<>(userId, startTime, trackList.get(i-1)._2(),trackList.get(i - 1)._3(), trackList.get(i - 1)._4()));
                 }
             }
             return finalList;
         }).flatMap(List::iterator);
-        JavaRDD<Row> rowRdd = filledRdd.map(row -> RowFactory.create(row._1(), row._2(), row._3(), row._4()));
+        return filledRdd;
+    }
+
+
+    /**
+     * 根据小时填充数据
+     * @return 填充后的数据
+     * Dataset<Row<imsi,timestamp, cellId,  longitude, latitude>>
+     */
+    public Dataset<Row> getFilledData(){
+        JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = getFilledRdd();
+        JavaRDD<Row> rowRdd = filledRdd.map(row -> RowFactory.create(row._1(), row._2(), row._3(), row._4(),row._5()));
         ArrayList<StructField> fields = new ArrayList<>();
-        StructField field = null;
-        field = DataTypes.createStructField("imsi",DataTypes.StringType,true);
-        fields.add(field);
-        field = DataTypes.createStructField("timestamp",DataTypes.LongType,true);
-        fields.add(field);
-        field = DataTypes.createStructField("longitude",DataTypes.StringType,true);
-        fields.add(field);
-        field = DataTypes.createStructField("latitude",DataTypes.StringType,true);
-        fields.add(field);
-        StructType schema = DataTypes.createStructType(fields);
+        StructField[] structFields = {
+                new StructField("imsi",DataTypes.StringType,true,Metadata.empty()),
+                new StructField("timestamp",DataTypes.LongType, true, Metadata.empty()),
+                new StructField("cell_id",DataTypes.StringType, true, Metadata.empty()),
+                new StructField("longitude",DataTypes.StringType, true,Metadata.empty()),
+                new StructField("latitude",DataTypes.StringType, true, Metadata.empty())
+        };
+        StructType schema = new StructType(structFields);
+//        StructField field = null;
+//        field = DataTypes.createStructField("imsi",DataTypes.StringType,true);
+//        fields.add(field);
+//        field = DataTypes.createStructField("timestamp",DataTypes.LongType,true);
+//        fields.add(field);
+//        field = DataTypes.createStructField("cell_id",DataTypes.StringType,true);
+//        fields.add(field);
+//        field = DataTypes.createStructField("longitude",DataTypes.StringType,true);
+//        fields.add(field);
+//        field = DataTypes.createStructField("latitude",DataTypes.StringType,true);
+//        fields.add(field);
+//        StructType schema = DataTypes.createStructType(fields);
         return spark.createDataFrame(rowRdd, schema);
     }
 
