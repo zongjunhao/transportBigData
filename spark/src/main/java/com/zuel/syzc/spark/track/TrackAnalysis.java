@@ -9,14 +9,16 @@ import org.apache.spark.mllib.clustering.KMeans;
 import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
-import org.apache.spark.mllib.util.MLUtils;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.Metadata;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import scala.*;
 
 import java.lang.Double;
 import java.lang.Long;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * 出行方式分析：
@@ -46,15 +48,14 @@ public class TrackAnalysis {
          * 5. 识别点间的轨迹为travel，每条子轨迹进行唯一编号tID = userId_i
          * 6. 将数据根据轨迹分组，并计算每条轨迹的5个特征值
          */
-        JavaRDD<Tuple6<String, Double, Double, Double, Double, Double>> featureRdd = cleanedRdd.flatMap(x -> {
+        JavaRDD<Tuple3<TrackFeature,TrackStation,TrackStation>> featureRdd = cleanedRdd.flatMap(x -> {
             String userId = x._1;
             List<Tuple4<Long, String, String, String>> trackerList = x._2;
 //            List<Tuple5<Long, String, String, String, String>> velocityList = new ArrayList<>();
-//            System.out.println(userId);
-            int tracker = 0, travel = 0, start = 0, end, i = 0;
+            int tracker = 0, travel = 0, start = 0, end, i = 0,travelStart=i;
             List<Tuple2<Double, Double>> trackerV = new ArrayList<>();
-            List<Tuple6<String, Double, Double, Double, Double, Double>> trackerFeatureList = new ArrayList<>();
-            Tuple6<String, Double, Double, Double, Double, Double> trackerFeature;
+            List<Tuple3<TrackFeature,TrackStation,TrackStation>> trackerFeatureList = new ArrayList<>();
+            TrackFeature trackerFeature;
             double beforeV, afterV, distance;
             distance = LocationUtils.getDistance(
                     Double.parseDouble(trackerList.get(i)._4()), Double.parseDouble(trackerList.get(i)._3()),
@@ -66,6 +67,9 @@ public class TrackAnalysis {
             trackerV.add(new Tuple2<>(afterV, distance));
 //            velocityList.add(new Tuple5<>(trackerList.get(i)._1(),trackerList.get(i)._2(),trackerList.get(i)._3(),trackerList.get(i)._4(),travel+"-"+tracker));
             for (i = 1; i < trackerList.size() - 1; i++) {
+                if (trackerList.get(i)._1().equals(trackerList.get(i + 1)._1())) {
+                    continue;
+                }
                 beforeV = LocationUtils.getVelocity(
                         Double.parseDouble(trackerList.get(i - 1)._4()), Double.parseDouble(trackerList.get(i - 1)._3()),
                         Double.parseDouble(trackerList.get(i)._4()), Double.parseDouble(trackerList.get(i)._3()),
@@ -81,52 +85,98 @@ public class TrackAnalysis {
                     if (trackerList.get(end)._1() - trackerList.get(start)._1() > 1000 * 60 * 30) {
                         trackerFeature = CalculateFeature.calculateFeature(trackerV, userId + "-" + travel + "-" + tracker);
                         if (trackerFeature != null)
-                            trackerFeatureList.add(trackerFeature);
+                            trackerFeatureList.add(new Tuple3<>(trackerFeature,
+                                    new TrackStation(trackerList.get(travelStart)._2(),trackerList.get(travelStart)._1()),
+                                    new TrackStation(trackerList.get(i)._2(),trackerList.get(i)._1())));
+                        travelStart = i;
                         travel++;
                         tracker++;
                         trackerV.clear();
                     } else if (Math.abs(beforeV - afterV) > 10 && trackerList.get(end)._1() - trackerList.get(start)._1() < 1000 * 60 * 10) {
                         trackerFeature = CalculateFeature.calculateFeature(trackerV, userId + "-" + travel + "-" + tracker);
                         if (trackerFeature != null)
-                            trackerFeatureList.add(trackerFeature);
+                            trackerFeatureList.add(new Tuple3<>(trackerFeature,
+                                    new TrackStation(trackerList.get(travelStart)._2(),trackerList.get(travelStart)._1()),
+                                    new TrackStation(trackerList.get(i)._2(),trackerList.get(i)._1())));
+                        travelStart = i;
                         tracker++;
                         trackerV.clear();
                     }
                 } else if (Math.abs(beforeV - afterV) > 20 && beforeV < 80 && afterV < 80) {
                     trackerFeature = CalculateFeature.calculateFeature(trackerV, userId + "-" + travel + "-" + tracker);
                     if (trackerFeature != null)
-                        trackerFeatureList.add(trackerFeature);
+                        trackerFeatureList.add(new Tuple3<>(trackerFeature,
+                                new TrackStation(trackerList.get(travelStart)._2(),trackerList.get(travelStart)._1()),
+                                new TrackStation(trackerList.get(i)._2(),trackerList.get(i)._1())));
+                    travelStart = i;
                     tracker++;
                     trackerV.clear();
                 }
                 trackerV.add(new Tuple2<>(afterV, distance));
-//                velocityList.add(new Tuple5<>(trackerList.get(i)._1(),trackerList.get(i)._2(),trackerList.get(i)._3(),trackerList.get(i)._4(),travel+"-"+tracker));
             }
-//            velocityList.add(new Tuple5<>(trackerList.get(i)._1(),trackerList.get(i)._2(),trackerList.get(i)._3(),trackerList.get(i)._4(),travel+"-"+tracker));
-//            for (Tuple6<String, Double, Double, Double, Double, Double> index : trackerFeatureList) {
-//                System.out.println(index);
-//            }
-
             return trackerFeatureList.iterator();
         });
-        featureRdd.collect().forEach(System.out::println);
+//        featureRdd.collect().forEach(System.out::println);
         JavaRDD<Vector> vectorFeatureRdd = featureRdd.map(x -> {
             double[] values = new double[5];
-            values[0] = x._2();
-            values[1] = x._3();
-            values[2] = x._4();
-            values[3] = x._5();
-            values[4] = x._6();
+            // avgV,distance,midV,p95V,minV
+            TrackFeature trackFeature = x._1();
+            values[0] = trackFeature.getAvgV();
+            values[1] = trackFeature.getDistance();
+            values[2] = trackFeature.getMidV();
+            values[3] = trackFeature.getP95v();
+            values[4] = trackFeature.getMinV();
             return Vectors.dense(values);
         });
         vectorFeatureRdd.cache();
-        int numClusters = 4;
+        int numClusters = 3;
         int numIterations = 100;
         KMeansModel clusters = KMeans.train(vectorFeatureRdd.rdd(), numClusters, numIterations);
-        System.out.println("center");
-        for (Vector center : clusters.clusterCenters()) {
-            System.out.println(center);
+//        System.out.println("avgV,distance,midV,p95V,minV");
+//        for (Vector center : clusters.clusterCenters()) {
+//            System.out.println(center);
+//        }
+
+        List<ClusterTransport> list = new ArrayList<>();
+        for (int i=0;i<clusters.clusterCenters().length;i++) {
+            ClusterTransport clusterTransport = new ClusterTransport();
+            clusterTransport.setCluster(i);
+            clusterTransport.setAvgV(clusters.clusterCenters()[i].toArray()[0]);
+            list.add(clusterTransport);
         }
+        list.sort(ClusterTransport::compareTo);
+        Map<Integer,String> clusterMap = new HashMap<>();
+        clusterMap.put(list.get(0).getCluster(),"walk");
+        clusterMap.put(list.get(1).getCluster(),"bus");
+        clusterMap.put(list.get(2).getCluster(),"subway");
+        JavaRDD<Row> rowRdd = featureRdd.map(x -> {
+            double[] values = new double[5];
+            TrackFeature trackFeature = x._1();
+            TrackStation trackStation = x._2();
+            TrackStation trackStation1 = x._3();
+            values[0] = trackFeature.getAvgV();
+            values[1] = trackFeature.getDistance();
+            values[2] = trackFeature.getMidV();
+            values[3] = trackFeature.getP95v();
+            values[4] = trackFeature.getMinV();
+            Integer predictResult = clusters.predict(Vectors.dense(values));
+//            System.out.println(x._1() + "--" + trackStation + "--" + trackStation1 + "-------" + clusterMap.get(predictResult));
+            return RowFactory.create(trackFeature.getTrackId(), trackStation.getCellId(), trackStation.getTimestamp(), trackStation1.getCellId(), trackStation1.getTimestamp(),clusterMap.get(predictResult));
+        });
+        StructType schema = new StructType(new StructField[]{
+                new StructField("track_id", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("start_cell", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("start_timestamp", DataTypes.LongType, true, Metadata.empty()),
+                new StructField("end_cell", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("end_timestamp", DataTypes.LongType, true, Metadata.empty()),
+                new StructField("track_way", DataTypes.StringType, true, Metadata.empty()),
+        });
+        Dataset<Row> trackDf = spark.createDataFrame(rowRdd, schema);
+        trackDf.show();
+        trackDf.write().format("jdbc").mode(SaveMode.Overwrite)
+                .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
+                .option("dbtable", "track_way")
+                .option("user", "root").option("password", "root").save();
     }
 
     static class CalculateFeature{
@@ -135,11 +185,11 @@ public class TrackAnalysis {
          * @param trackerV trackerList
          * @return (avgV,distance,midV,p95V,minV)
          */
-        public static Tuple6<String,Double,Double,Double,Double,Double> calculateFeature(List<Tuple2<Double,Double>> trackerV,String trackerId){
+        public static TrackFeature calculateFeature(List<Tuple2<Double,Double>> trackerV,String trackerId){
             trackerV.sort((x1,x2)->x1._1.compareTo(x2._1));
             //计算特征数据：平均速度，出行距离，中位速度，95%位速度，低速度率
-            double avgV = trackerV.stream().mapToDouble((x)->x._1).average().getAsDouble();
-            double minV = trackerV.get(0)._1;
+            double avgV = trackerV.stream().mapToDouble((x)->x._1).average().orElseGet(null);
+            double minV = trackerV.stream().filter(x->x._1<30).count()*1.0/trackerV.size();
             double distance = trackerV.stream().mapToDouble(x->x._2).sum()/1000;
             double midV;
             if (trackerV.size()%2==0) {
@@ -147,13 +197,11 @@ public class TrackAnalysis {
             } else {
                 midV = trackerV.get(trackerV.size()/2)._1;
             }
-            double p95V = trackerV.get((int) (trackerV.size() * 0.95))._1;
+            double p95V = trackerV.get((int) ((trackerV.size()-1) * 0.95))._1;
             if (avgV + distance + midV + p95V + midV < 0.001)
                 return null;
             else
-                return new Tuple6<>(trackerId,avgV,distance,midV,p95V,minV);
+                return new TrackFeature(trackerId,avgV,distance,midV,p95V,minV);
         }
     }
-
-
 }
