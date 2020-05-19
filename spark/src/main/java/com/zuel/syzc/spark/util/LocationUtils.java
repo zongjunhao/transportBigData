@@ -33,6 +33,28 @@ public class LocationUtils {
         return s;
     }
 
+
+    /**
+     *  过去两点间速度
+     * @param lat1 经度1
+     * @param lng1 纬度2
+     * @param lat2 经度2
+     * @param lng2 纬度2
+     * @param time1 开始时间
+     * @param time2 结束时间
+     * @return 两点间速度 km/h
+     */
+    public static double getVelocity(double lat1, double lng1, double lat2, double lng2,long time1,long time2){
+        long minus = time2 - time1;
+        double distance = getDistance(lat1,lng1,lat2,lng2);
+        return  distance * 1.0 / minus * 60 * 60;
+    }
+
+    public static double getVelocity(double distance,long time1,long time2){
+        long minus = time2 - time1;
+        return  distance * 1.0 / minus * 60 * 60;
+    }
+
     public static void main(String[] args) {
         /**
          * |1538481509242|460000095007329090| 16789|67567924|123.4159698|41.80778122|

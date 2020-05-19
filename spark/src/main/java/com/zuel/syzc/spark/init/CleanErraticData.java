@@ -40,6 +40,11 @@ public class CleanErraticData {
         this.spark = spark;
     }
 
+    /**
+     * 清除数据
+     * 漂移数据和乒乓数据
+     * @return JavaPairRDD<userId, List<Tuple4<time, cellId, longitude, latitude>>>
+     */
     public JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanErraticData(){
         Init initData = new Init(spark);
         JavaRDD<Row> cleanedRdd = initData.init().toJavaRDD();
@@ -90,21 +95,28 @@ public class CleanErraticData {
 //            System.out.print(trackList.size()+"-");
             // 清除漂移数据
             // 如果某个点前后速度大于300km/s，则将其视为异常数据，将其删除
-            int speedInterval = 150;
+            int speedInterval = 80;
             for (int i = 1; i < trackList.size() - 1; i++) {
-                long beforeMinus = trackList.get(i)._1() - trackList.get(i - 1)._1();
-                long afterMinus = trackList.get(i + 1)._1() - trackList.get(i)._1();
-                double beforeDistance = LocationUtils.getDistance(
-                        Double.parseDouble(trackList.get(i - 1)._4()), Double.parseDouble(trackList.get(i - 1)._3()),
+//                long beforeMinus =  - trackList.get(i - 1)._1();
+//                long afterMinus = trackList.get(i + 1)._1() - trackList.get(i)._1();
+                double distance1 = LocationUtils.getDistance(Double.parseDouble(trackList.get(i - 1)._4()), Double.parseDouble(trackList.get(i - 1)._3()),
                         Double.parseDouble(trackList.get(i)._4()), Double.parseDouble(trackList.get(i)._3()));
-                double afterDistance = LocationUtils.getDistance(
-                        Double.parseDouble(trackList.get(i + 1)._4()), Double.parseDouble(trackList.get(i + 1)._3()),
+                double distance2 = LocationUtils.getDistance(Double.parseDouble(trackList.get(i + 1)._4()), Double.parseDouble(trackList.get(i + 1)._3()),
                         Double.parseDouble(trackList.get(i)._4()), Double.parseDouble(trackList.get(i)._3()));
-                double beforeV = beforeDistance * 1.0 / beforeMinus * 60 * 60;
-                double afterV = afterDistance * 1.0 / afterMinus * 60 * 60;
-                if (beforeV > speedInterval && afterV > speedInterval) {
+                double distance3 = LocationUtils.getDistance(Double.parseDouble(trackList.get(i + 1)._4()), Double.parseDouble(trackList.get(i + 1)._3()),
+                        Double.parseDouble(trackList.get(i-1)._4()), Double.parseDouble(trackList.get(i-1)._3()));
+                double beforeV = LocationUtils.getVelocity(distance1,trackList.get(i - 1)._1(),trackList.get(i)._1());
+                double afterV = LocationUtils.getVelocity(distance2,trackList.get(i)._1(),trackList.get(i + 1)._1());
+                double deletedV = LocationUtils.getVelocity(distance3,trackList.get(i - 1)._1(),trackList.get(i + 1)._1());
+//                double beforeV = beforeDistance * 1.0 / beforeMinus * 60 * 60;
+//                double afterV = afterDistance * 1.0 / afterMinus * 60 * 60;
+                if (beforeV > speedInterval && afterV > speedInterval && deletedV < speedInterval) {
 //                    System.out.println(userId+":"+beforeDistance+"-"+beforeMinus*1.0/1000/60+"----"+afterDistance+"-"+afterMinus*1.0/1000/60);
 //                    System.out.println(userId+":"+beforeV+"-"+afterV);
+                    deleted.add(trackList.get(i));
+                } else if (distance1>2000 && distance2 > 2000 && distance3 < 2000*2) {
+                    deleted.add(trackList.get(i));
+                } else if((beforeV > 200) && deletedV <200) {
                     deleted.add(trackList.get(i));
                 }
             }
