@@ -1,5 +1,3 @@
-package com.zuel.syzc.spark.init;
-
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
 

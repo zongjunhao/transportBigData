@@ -28,10 +28,11 @@ public class CleanErraticData {
     public static void main(String[] args) {
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-        Dataset<Row> filledData = new CleanErraticData(spark).getFilledData();
-        filledData.show();
+//        Dataset<Row> filledData = new CleanErraticData(spark).getFilledData();
+//        filledData.show();
 //        filledData.collect().forEach(x->System.out.println(x._1()+"--"+DateUtil.getDateFormat(x._2())+"--"+x._3()+"-"+x._4()));
-//        new cleanErraticData(spark).cleanErraticData();
+        JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedRdd = new CleanErraticData(spark).cleanErraticData();
+        cleanedRdd.collect();
     }
 
     private SparkSession spark;
@@ -40,6 +41,11 @@ public class CleanErraticData {
         this.spark = spark;
     }
 
+    /**
+     * 清除数据
+     * 漂移数据和乒乓数据
+     * @return JavaPairRDD<userId, List<Tuple4<time, cellId, longitude, latitude>>>
+     */
     public JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanErraticData(){
         Init initData = new Init(spark);
         JavaRDD<Row> cleanedRdd = initData.init().toJavaRDD();
@@ -61,7 +67,8 @@ public class CleanErraticData {
             // 清除ABA类型数据
             ArrayList<Integer> filter = new ArrayList<>();
             ArrayList<Tuple4<Long, String, String, String>> deleted = new ArrayList<>();
-            for (int i = 0; i < trackList.size() - 2; i++) {
+            int i;
+            for (i = 0; i < trackList.size() - 2; i++) {
                 if (!trackList.get(i)._2().equals(trackList.get(i + 1)._2()) && trackList.get(i)._2().equals(trackList.get(i + 2)._2())) {
 //                    System.out.println(userId+"---"+trackList.get(i)._2()+"("+DateUtil.getDateFormat(trackList.get(i)._1())+")-"+trackList.get(i+1)._2()+"("+DateUtil.getDateFormat(trackList.get(i+1)._1())+")-"+trackList.get(i+2)._2()+"("+DateUtil.getDateFormat(trackList.get(i+2)._1())+")");
                     if (trackList.get(i + 2)._1() - trackList.get(i)._1() < interval) {
@@ -69,16 +76,11 @@ public class CleanErraticData {
                     }
                 }
             }
-//            System.out.print(userId+"--"+trackList.size()+"-");
             trackList.removeAll(deleted);
             deleted.clear();
             // 清除ABCA类型数据
-            for (int i = 0; i < trackList.size() - 3; i++) {
+            for (i = 0; i < trackList.size() - 3; i++) {
                 if (!trackList.get(i)._2().equals(trackList.get(i + 1)._2()) && trackList.get(i)._2().equals(trackList.get(i + 3)._2())) {
-//                    System.out.println(userId+"---"+trackList.get(i)._2()+"("+DateUtil.getDateFormat(trackList.get(i)._1())+")-"+
-//                            trackList.get(i+1)._2()+"("+DateUtil.getDateFormat(trackList.get(i+1)._1())+")-"+
-//                            trackList.get(i+2)._2()+"("+DateUtil.getDateFormat(trackList.get(i+2)._1())+")-"+
-//                            trackList.get(i+3)._2()+"("+DateUtil.getDateFormat(trackList.get(i+3)._1())+")");
                     if (trackList.get(i + 3)._1() - trackList.get(i)._1() < interval) {
                         deleted.add(trackList.get(i + 1));
                         deleted.add(trackList.get(i + 2));
@@ -87,31 +89,47 @@ public class CleanErraticData {
             }
             trackList.removeAll(deleted); // 删除乒乓数据
             deleted.clear(); // 清空需删除的列表
-//            System.out.print(trackList.size()+"-");
             // 清除漂移数据
             // 如果某个点前后速度大于300km/s，则将其视为异常数据，将其删除
-            int speedInterval = 150;
-            for (int i = 1; i < trackList.size() - 1; i++) {
-                long beforeMinus = trackList.get(i)._1() - trackList.get(i - 1)._1();
-                long afterMinus = trackList.get(i + 1)._1() - trackList.get(i)._1();
-                double beforeDistance = LocationUtils.getDistance(
-                        Double.parseDouble(trackList.get(i - 1)._4()), Double.parseDouble(trackList.get(i - 1)._3()),
-                        Double.parseDouble(trackList.get(i)._4()), Double.parseDouble(trackList.get(i)._3()));
-                double afterDistance = LocationUtils.getDistance(
-                        Double.parseDouble(trackList.get(i + 1)._4()), Double.parseDouble(trackList.get(i + 1)._3()),
-                        Double.parseDouble(trackList.get(i)._4()), Double.parseDouble(trackList.get(i)._3()));
-                double beforeV = beforeDistance * 1.0 / beforeMinus * 60 * 60;
-                double afterV = afterDistance * 1.0 / afterMinus * 60 * 60;
-                if (beforeV > speedInterval && afterV > speedInterval) {
-//                    System.out.println(userId+":"+beforeDistance+"-"+beforeMinus*1.0/1000/60+"----"+afterDistance+"-"+afterMinus*1.0/1000/60);
-//                    System.out.println(userId+":"+beforeV+"-"+afterV);
-                    deleted.add(trackList.get(i));
+            int speedInterval = 80;
+            boolean isClean = true;
+            while (isClean) {
+                for (i = 1; i < trackList.size() - 1; i++) {
+                    double distance1 = LocationUtils.getDistance(Double.parseDouble(trackList.get(i - 1)._4()), Double.parseDouble(trackList.get(i - 1)._3()),
+                            Double.parseDouble(trackList.get(i)._4()), Double.parseDouble(trackList.get(i)._3()));
+                    double distance2 = LocationUtils.getDistance(Double.parseDouble(trackList.get(i + 1)._4()), Double.parseDouble(trackList.get(i + 1)._3()),
+                            Double.parseDouble(trackList.get(i)._4()), Double.parseDouble(trackList.get(i)._3()));
+                    double distance3 = LocationUtils.getDistance(Double.parseDouble(trackList.get(i + 1)._4()), Double.parseDouble(trackList.get(i + 1)._3()),
+                            Double.parseDouble(trackList.get(i-1)._4()), Double.parseDouble(trackList.get(i-1)._3()));
+                    double beforeV = LocationUtils.getVelocity(distance1,trackList.get(i - 1)._1(),trackList.get(i)._1());
+                    double afterV = LocationUtils.getVelocity(distance2,trackList.get(i)._1(),trackList.get(i + 1)._1());
+                    double deletedV = LocationUtils.getVelocity(distance3,trackList.get(i - 1)._1(),trackList.get(i + 1)._1());
+
+                    if (beforeV > speedInterval && afterV > speedInterval && deletedV < speedInterval) {
+                        deleted.add(trackList.get(i));
+                    } else if (distance1>2000 && distance2 > 2000 && distance3 < 2000*2) {
+                        deleted.add(trackList.get(i));
+                    } else if((beforeV > 200) && (deletedV <200|| deletedV<beforeV)) {
+                        deleted.add(trackList.get(i));
+                    } else if((afterV>200)&& (deletedV <200|| deletedV<beforeV)) {
+                        deleted.add(trackList.get(i));
+                    }
+                }
+                trackList.removeAll(deleted); // 删除乒乓数据
+                deleted.clear(); // 清空需删除的列表
+                isClean = false;
+                for (i=0;i<trackList.size()-1;i++) {
+                    double distance2 = LocationUtils.getDistance(Double.parseDouble(trackList.get(i + 1)._4()), Double.parseDouble(trackList.get(i + 1)._3()),
+                            Double.parseDouble(trackList.get(i)._4()), Double.parseDouble(trackList.get(i)._3()));
+                    double afterV = LocationUtils.getVelocity(distance2,trackList.get(i)._1(),trackList.get(i + 1)._1());
+                    if (afterV>200) {
+                        isClean = true;
+                    }
                 }
             }
-            trackList.removeAll(deleted); // 删除乒乓数据
-            deleted.clear(); // 清空需删除的列表
             return new Tuple2<>(userId, trackList);
         });
+//        System.out.println();
         return filteredData;
     }
 

@@ -1,5 +1,6 @@
 package com.zuel.syzc.spark.kit;
 
+import com.zuel.syzc.spark.init.CleanErraticData;
 import com.zuel.syzc.spark.init.Init;
 import org.apache.commons.math3.ml.clustering.Cluster;
 import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
@@ -30,6 +31,10 @@ public class DBSCAN {
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
 
         JavaSparkContext sparkContext = new JavaSparkContext(spark.sparkContext());
+
+        Dataset<Row> filledData = new CleanErraticData(spark).getFilledData();
+//        filledData.show();
+
         // 获取清洗并合并后的数据集即joined_data
         new Init(spark).init();
         // 获取所有用户的唯一id
@@ -45,7 +50,7 @@ public class DBSCAN {
             spark.sql("select * from joined_data where imsi = '" + uId + "'").createOrReplaceTempView("user_" + uId);
         }
         // eps停留点判别距离阈值(单位：米)；minPts停留点判别时间阈值(单位：分钟)
-        DBSCANClusterer dbscanClusterer = new DBSCANClusterer(500, 5);
+        DBSCANClusterer dbscanClusterer = new DBSCANClusterer(0.05, 3);
         for (String id : idList) {
             // 提取每个用户的经纬度数据
             List<Row> pointList = spark.sql("select * from user_" + id).select("longitude", "latitude").collectAsList();
@@ -108,6 +113,7 @@ public class DBSCAN {
 
             spark.sql("select * from user_" + id).show();
             spark.sql("select * from user_cluster_" + id).show();
+            new KNN(spark, spark.sql("select * from user_cluster_" + id)).processWithKnn(3, 4);
         }
     }
 }
