@@ -48,13 +48,14 @@ public class TrackAnalysis {
          * 5. 识别点间的轨迹为travel，每条子轨迹进行唯一编号tID = userId_i
          * 6. 将数据根据轨迹分组，并计算每条轨迹的5个特征值
          */
-        JavaRDD<Tuple3<TrackFeature,TrackStation,TrackStation>> featureRdd = cleanedRdd.flatMap(x -> {
+        JavaRDD<Tuple2<List<UserTrack>, List<Tuple3<TrackFeature, TrackStation, TrackStation>>>> mapRdd = cleanedRdd.map(x -> {
             String userId = x._1;
             List<Tuple4<Long, String, String, String>> trackerList = x._2;
+            List<UserTrack> userTrackDetail = new ArrayList<>();
 //            List<Tuple5<Long, String, String, String, String>> velocityList = new ArrayList<>();
-            int tracker = 0, travel = 0, start = 0, end, i = 0,travelStart=i;
+            int tracker = 0, travel = 0, start = 0, end, i = 0, travelStart = i;
             List<Tuple2<Double, Double>> trackerV = new ArrayList<>();
-            List<Tuple3<TrackFeature,TrackStation,TrackStation>> trackerFeatureList = new ArrayList<>();
+            List<Tuple3<TrackFeature, TrackStation, TrackStation>> trackerFeatureList = new ArrayList<>();
             TrackFeature trackerFeature;
             double beforeV, afterV, distance;
             distance = LocationUtils.getDistance(
@@ -65,6 +66,7 @@ public class TrackAnalysis {
                 start = i;
             }
             trackerV.add(new Tuple2<>(afterV, distance));
+            userTrackDetail.add(new UserTrack(trackerList.get(i), userId, userId + "-" + travel + "-" + tracker));
 //            velocityList.add(new Tuple5<>(trackerList.get(i)._1(),trackerList.get(i)._2(),trackerList.get(i)._3(),trackerList.get(i)._4(),travel+"-"+tracker));
             for (i = 1; i < trackerList.size() - 1; i++) {
                 if (trackerList.get(i)._1().equals(trackerList.get(i + 1)._1())) {
@@ -86,8 +88,8 @@ public class TrackAnalysis {
                         trackerFeature = CalculateFeature.calculateFeature(trackerV, userId + "-" + travel + "-" + tracker);
                         if (trackerFeature != null)
                             trackerFeatureList.add(new Tuple3<>(trackerFeature,
-                                    new TrackStation(trackerList.get(travelStart)._2(),trackerList.get(travelStart)._1()),
-                                    new TrackStation(trackerList.get(i)._2(),trackerList.get(i)._1())));
+                                    new TrackStation(trackerList.get(travelStart)._2(), trackerList.get(travelStart)._1()),
+                                    new TrackStation(trackerList.get(i)._2(), trackerList.get(i)._1())));
                         travelStart = i;
                         travel++;
                         tracker++;
@@ -96,8 +98,8 @@ public class TrackAnalysis {
                         trackerFeature = CalculateFeature.calculateFeature(trackerV, userId + "-" + travel + "-" + tracker);
                         if (trackerFeature != null)
                             trackerFeatureList.add(new Tuple3<>(trackerFeature,
-                                    new TrackStation(trackerList.get(travelStart)._2(),trackerList.get(travelStart)._1()),
-                                    new TrackStation(trackerList.get(i)._2(),trackerList.get(i)._1())));
+                                    new TrackStation(trackerList.get(travelStart)._2(), trackerList.get(travelStart)._1()),
+                                    new TrackStation(trackerList.get(i)._2(), trackerList.get(i)._1())));
                         travelStart = i;
                         tracker++;
                         trackerV.clear();
@@ -106,16 +108,38 @@ public class TrackAnalysis {
                     trackerFeature = CalculateFeature.calculateFeature(trackerV, userId + "-" + travel + "-" + tracker);
                     if (trackerFeature != null)
                         trackerFeatureList.add(new Tuple3<>(trackerFeature,
-                                new TrackStation(trackerList.get(travelStart)._2(),trackerList.get(travelStart)._1()),
-                                new TrackStation(trackerList.get(i)._2(),trackerList.get(i)._1())));
+                                new TrackStation(trackerList.get(travelStart)._2(), trackerList.get(travelStart)._1()),
+                                new TrackStation(trackerList.get(i)._2(), trackerList.get(i)._1())));
                     travelStart = i;
                     tracker++;
                     trackerV.clear();
                 }
+
                 trackerV.add(new Tuple2<>(afterV, distance));
+                userTrackDetail.add(new UserTrack(trackerList.get(i), userId, userId + "-" + travel + "-" + tracker));
             }
-            return trackerFeatureList.iterator();
+            return new Tuple2<>(userTrackDetail, trackerFeatureList);
         });
+        JavaRDD<Row> mapRow = mapRdd.flatMap(x -> x._1.iterator()).map(x -> RowFactory.create(x.getUserId(), x.getCellId(), x.getLongitude(), x.getLatitude(), x.getTimestamp(), x.getTrackId()));
+        StructType schema = new StructType(new StructField[]{
+                new StructField("user_id", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("cell_id", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("longitude", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("latitude", DataTypes.StringType, true, Metadata.empty()),
+                new StructField("timestamp", DataTypes.LongType, true, Metadata.empty()),
+                new StructField("track_id", DataTypes.StringType, true, Metadata.empty()),
+        });
+        Dataset<Row> trackDf = spark.createDataFrame(mapRow, schema);
+        trackDf.show();
+        trackDf.write().format("jdbc").mode(SaveMode.Overwrite)
+                .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data?rewriteBatchedStatements=true")
+                .option("dbtable", "user_track_detail")
+                .option("batchsize",10000)
+                .option("isolationLevel","NONE")
+                .option("truncate","false")
+                .option("user", "root").option("password", "root").save();
+
+        JavaRDD<Tuple3<TrackFeature, TrackStation, TrackStation>> featureRdd = mapRdd.flatMap(x -> x._2.iterator());
 //        featureRdd.collect().forEach(System.out::println);
         JavaRDD<Vector> vectorFeatureRdd = featureRdd.map(x -> {
             double[] values = new double[5];
@@ -129,8 +153,8 @@ public class TrackAnalysis {
             return Vectors.dense(values);
         });
         vectorFeatureRdd.cache();
-        int numClusters = 3;
-        int numIterations = 100;
+        int numClusters = 4;
+        int numIterations = 200;
         KMeansModel clusters = KMeans.train(vectorFeatureRdd.rdd(), numClusters, numIterations);
 //        System.out.println("avgV,distance,midV,p95V,minV");
 //        for (Vector center : clusters.clusterCenters()) {
@@ -149,6 +173,8 @@ public class TrackAnalysis {
         clusterMap.put(list.get(0).getCluster(),"walk");
         clusterMap.put(list.get(1).getCluster(),"bus");
         clusterMap.put(list.get(2).getCluster(),"subway");
+        clusterMap.put(list.get(3).getCluster(),"highway");
+//        System.out.println(clusterMap);
         JavaRDD<Row> rowRdd = featureRdd.map(x -> {
             double[] values = new double[5];
             TrackFeature trackFeature = x._1();
@@ -163,7 +189,7 @@ public class TrackAnalysis {
 //            System.out.println(x._1() + "--" + trackStation + "--" + trackStation1 + "-------" + clusterMap.get(predictResult));
             return RowFactory.create(trackFeature.getTrackId(), trackStation.getCellId(), trackStation.getTimestamp(), trackStation1.getCellId(), trackStation1.getTimestamp(),clusterMap.get(predictResult));
         });
-        StructType schema = new StructType(new StructField[]{
+        schema = new StructType(new StructField[]{
                 new StructField("track_id", DataTypes.StringType, true, Metadata.empty()),
                 new StructField("start_cell", DataTypes.StringType, true, Metadata.empty()),
                 new StructField("start_timestamp", DataTypes.LongType, true, Metadata.empty()),
@@ -171,11 +197,14 @@ public class TrackAnalysis {
                 new StructField("end_timestamp", DataTypes.LongType, true, Metadata.empty()),
                 new StructField("track_way", DataTypes.StringType, true, Metadata.empty()),
         });
-        Dataset<Row> trackDf = spark.createDataFrame(rowRdd, schema);
+        trackDf = spark.createDataFrame(rowRdd, schema);
         trackDf.show();
         trackDf.write().format("jdbc").mode(SaveMode.Overwrite)
-                .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
+                .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data?rewriteBatchedStatements=true")
                 .option("dbtable", "track_way")
+                .option("batchsize",10000)
+                .option("isolationLevel","NONE")
+                .option("truncate","false")
                 .option("user", "root").option("password", "root").save();
     }
 

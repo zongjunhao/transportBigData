@@ -9,14 +9,14 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.Metadata;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import scala.Tuple2;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 创建OD矩阵
@@ -35,17 +35,38 @@ public class OdMatrix {
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         OdMatrix od = new OdMatrix();
-        // 计算Od矩阵
-        int[][] odMatrix = od.odCalculate(spark, "2018-10-01-00", "2018-10-03-00");
-        for (int[] matrix : odMatrix) {
-            for (int i : matrix) {
-                System.out.print(i+" ");
-            }
-            System.out.println();
-        }
-        // 计算某个区域内的人口流出流出量
-        Map<String, List<InOutTimeNumber>> areaInflowAndOutFlow = od.getAreaInflowAndOutFlow(spark, "2018-10-01-00", 1000 * 60 * 60 * 4);
-        System.out.println(areaInflowAndOutFlow);
+        od.save(spark, "2018-10-01-00", "2018-10-03-00");
+//        // 计算Od矩阵
+//        int[][] odMatrix = od.odCalculate(spark, "2018-10-01-00", "2018-10-03-00");
+//        for (int[] matrix : odMatrix) {
+////            System.out.println(Arrays.toString(matrix).substring(1,Arrays.toString(matrix).length()-1));
+//            for (int i : matrix) {
+//                System.out.print(i+" ");
+//            }
+//            System.out.println();
+//        }
+//        // 计算某个区域内的人口流出流出量
+//        Map<String, List<InOutTimeNumber>> areaInflowAndOutFlow = od.getAreaInflowAndOutFlow(spark, "2018-10-01-00", 1000 * 60 * 60 * 4);
+//        System.out.println(areaInflowAndOutFlow);
+    }
+
+    public void save(SparkSession spark, String startTime,String endTime){
+        JavaPairRDD<Tuple2<Integer, Integer>, Integer> userOdListRdd = getAreaOdMatrix(spark, startTime, endTime);
+        JavaRDD<Row> odRow = userOdListRdd.map(x -> RowFactory.create(x._1._1, x._1._2, x._2));
+        StructType schema = new StructType(new StructField[]{
+                new StructField("start_id", DataTypes.IntegerType, true, Metadata.empty()),
+                new StructField("end_id", DataTypes.IntegerType, true, Metadata.empty()),
+                new StructField("count", DataTypes.IntegerType, true, Metadata.empty()),
+        });
+        Dataset<Row> trackDf = spark.createDataFrame(odRow, schema);
+        trackDf.show();
+        trackDf.write().format("jdbc").mode(SaveMode.Overwrite)
+                .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data?rewriteBatchedStatements=true")
+                .option("dbtable", "od_matrix")
+                .option("batchsize",10000)
+                .option("isolationLevel","NONE")
+                .option("truncate","false")
+                .option("user", "root").option("password", "root").save();
     }
 
     /**

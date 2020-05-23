@@ -51,7 +51,7 @@ public class UnusualCrowdDensity {
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         UnusualCrowdDensity unusualCrowdDensity = new UnusualCrowdDensity();
         JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = new CleanErraticData(spark).getFilledRdd();
-        unusualCrowdDensity.computeHistoryPeople(spark,DateUtil.getTimestamp("2018-10-01 00:00:00.000"),DateUtil.getTimestamp("2018-10-03 23:00:00.000"),filledRdd);
+//        unusualCrowdDensity.computeHistoryPeople(spark,DateUtil.getTimestamp("2018-10-01 00:00:00.000"),DateUtil.getTimestamp("2018-10-03 23:00:00.000"),filledRdd);
         JavaRDD<Row> rowJavaRDD = unusualCrowdDensity.judgeAbnormalCell(spark, DateUtil.getTimestamp("2018-10-03 23:00:00.000"), filledRdd);
         rowJavaRDD.collect().forEach(System.out::println);
 //        unusualCrowdDensity.computeT(spark,DateUtil.getTimestamp("2018-10-03 20:00:00.000"));
@@ -95,6 +95,9 @@ public class UnusualCrowdDensity {
         cellCountDf.write().format("jdbc").mode(SaveMode.Overwrite)
                 .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
                 .option("dbtable", "cell_count")
+                .option("batchsize",10000)
+                .option("isolationLevel","NONE")
+                .option("truncate","false")
                 .option("user", "root").option("password", "root").save();
     }
 
@@ -175,16 +178,19 @@ public class UnusualCrowdDensity {
             if (threshold.isPresent()) {
                 isAbnormal = countNow >= threshold.get() ? 1 : 0;
             }
-            Long dayHour = isAbnormal>0?startDay:null;
+            Long dayHour = startDay;
             return RowFactory.create(day, dayTime, x._1, dayHour,countNow * 1.0, isAbnormal);
         });
         JavaRDD<Row> abnormalRdd = newCellRow.filter(x -> x.getInt(5) > 0);
         Dataset<Row> abnormalDfFinal = spark.createDataFrame(newCellRow, schema);
         abnormalDfFinal.show();
-//        abnormalDfFinal.write().format("jdbc").mode(SaveMode.Append)
-//                .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
-//                .option("dbtable", "cell_count")
-//                .option("user", "root").option("password", "root").save();
+        abnormalDfFinal.write().format("jdbc").mode(SaveMode.Overwrite)
+                .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
+                .option("dbtable", "current_cell_count")
+                .option("batchsize",10000)
+                .option("isolationLevel","NONE")
+                .option("truncate","false")
+                .option("user", "root").option("password", "root").save();
         return abnormalRdd;
     }
 
