@@ -1,4 +1,4 @@
-package com.zuel.syzc.spark.kit;
+package com.zuel.syzc.spark.entity;
 
 /**
  * 基站点

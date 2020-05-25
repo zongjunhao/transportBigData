@@ -1,5 +1,7 @@
 package com.zuel.syzc.spark.kit;
 
+import com.zuel.syzc.spark.entity.BaseStationPoint;
+import com.zuel.syzc.spark.entity.Rectangle;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.ml.clustering.KMeans;
@@ -15,6 +17,11 @@ import scala.Tuple2;
 import java.util.*;
 
 public class GetCells {
+    private SparkSession spark;
+
+    public GetCells(SparkSession spark) {
+        this.spark = spark;
+    }
 
     /**
      * 判断基站坐标是否在圆形范围内
@@ -25,7 +32,7 @@ public class GetCells {
      * @return Tuple2<基站CellId, 位置标记> 0:不在范围内, 1:在范围内
      */
     public List<Tuple2<String, Integer>> getCellsInCircle(double longitude, double latitude, double radius) {
-        Iterator<Row> data = getData();
+        Iterator<Row> data = getData(spark);
         List<Tuple2<String, Integer>> baseStationCells = new ArrayList<>();
         while (data.hasNext()) {
             Row row = data.next();
@@ -67,7 +74,7 @@ public class GetCells {
      * @return Tuple2<基站CellId, 位置标记> 0:不在范围内, 1:在范围内
      */
     public List<Tuple2<String, Integer>> getCellsInPolygon(List<BaseStationPoint> points) {
-        Iterator<Row> data = getData();
+        Iterator<Row> data = getData(spark);
         List<Tuple2<String, Integer>> baseStationCells = new ArrayList<>();
         // 构造多边形的外包矩形
         Rectangle rectangle = new Rectangle(points);
@@ -155,11 +162,13 @@ public class GetCells {
      *
      * @return Iterator形式的数据
      */
-    private Iterator<Row> getData() {
-        SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
-        SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
+    private Iterator<Row> getData(SparkSession spark) {
+//        SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
+//        SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         spark.read().format("csv").option("header", "true").load("in/服创大赛-基站经纬度数据.csv").createOrReplaceTempView("longitude");
         Dataset<Row> dataset = spark.sql("select * from longitude");
+//        CleanErraticData cleanErraticData = new CleanErraticData(spark);
+//        Dataset<Row> dataset = cleanErraticData.getFilledData();
         return dataset.toLocalIterator();
     }
 

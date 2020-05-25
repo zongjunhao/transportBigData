@@ -1,4 +1,6 @@
-package com.zuel.syzc.spark.kit;
+package com.zuel.syzc.spark.entity;
+
+import com.zuel.syzc.spark.entity.BaseStationPoint;
 
 import java.util.List;
 

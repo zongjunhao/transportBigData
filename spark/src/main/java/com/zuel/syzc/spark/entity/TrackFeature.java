@@ -1,4 +1,4 @@
-package com.zuel.syzc.spark.track;
+package com.zuel.syzc.spark.entity;
 
 import lombok.Data;
 import lombok.ToString;

@@ -1,5 +1,6 @@
 package com.zuel.syzc.spring.service;
 
+import com.zuel.syzc.spring.model.entity.AreaInOutFlow;
 import com.zuel.syzc.spring.model.entity.OdMatrix;
 import org.springframework.stereotype.Service;
 
@@ -12,5 +13,5 @@ public interface TrackStayService {
     // 获取Od矩阵
     public List<OdMatrix> getOd(Long startTime, Long endTime);
     // 获取指定区域内人口流入流出量
-    public void getInOutFlow();
+    public AreaInOutFlow getInOutFlow();
 }

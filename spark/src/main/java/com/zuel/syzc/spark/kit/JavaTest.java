@@ -1,5 +1,8 @@
 package com.zuel.syzc.spark.kit;
 
+import com.zuel.syzc.spark.entity.BaseStationPoint;
+import org.apache.spark.SparkConf;
+import org.apache.spark.sql.SparkSession;
 import org.junit.Test;
 import scala.Tuple2;
 
@@ -11,6 +14,10 @@ import java.util.List;
 public class JavaTest {
     @Test
     public void getCells() {
+        // spark配置文件
+        SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
+        // spark sql上下文对象
+        SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         List<BaseStationPoint> points = new ArrayList<>();
         points.add(new BaseStationPoint(0, 0));
         points.add(new BaseStationPoint(1, 0));
@@ -18,7 +25,7 @@ public class JavaTest {
         points.add(new BaseStationPoint(1, 2));
         points.add(new BaseStationPoint(0, 2));
         points.add(new BaseStationPoint(1, 1));
-        GetCells getCells = new GetCells();
+        GetCells getCells = new GetCells(spark);
         List<Tuple2<String, Integer>> cellsInCircle = getCells.getCellsInCircle(123.4159698, 41.80778122, 1000);
         System.out.println("cellsInCircle = " + cellsInCircle);
         List<Tuple2<String, Integer>> cellsInPolygon = getCells.getCellsInPolygon(points);

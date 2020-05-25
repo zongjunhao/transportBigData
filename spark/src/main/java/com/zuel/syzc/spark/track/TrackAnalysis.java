@@ -1,5 +1,9 @@
 package com.zuel.syzc.spark.track;
 
+import com.zuel.syzc.spark.entity.ClusterTransport;
+import com.zuel.syzc.spark.entity.TrackFeature;
+import com.zuel.syzc.spark.entity.TrackStation;
+import com.zuel.syzc.spark.entity.UserTrack;
 import com.zuel.syzc.spark.init.CleanErraticData;
 import com.zuel.syzc.spark.util.LocationUtils;
 import org.apache.spark.SparkConf;

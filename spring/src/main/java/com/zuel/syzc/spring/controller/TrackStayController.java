@@ -2,6 +2,7 @@ package com.zuel.syzc.spring.controller;
 
 import com.zuel.syzc.spring.constant.enums.ResultCodeEnum;
 import com.zuel.syzc.spring.model.dto.UserTrack;
+import com.zuel.syzc.spring.model.entity.AreaInOutFlow;
 import com.zuel.syzc.spring.model.entity.OdMatrix;
 import com.zuel.syzc.spring.model.vo.ResultData;
 import com.zuel.syzc.spring.service.TrackStayService;
@@ -41,8 +42,19 @@ public class TrackStayController {
 
     }
     @RequestMapping("/getInOutFlow")
-    public ResultData getInOutFlow(){
-        ResultData resultData = new ResultData();
+    public ResultData getInOutFlow(Double longitude,Double latitude,Double radius, Long startTime,Long endTime){
+        ResultData<AreaInOutFlow> resultData = new ResultData<>();
+        if (longitude == null || latitude == null || radius == null ||startTime == null) {
+            resultData.setResult(ResultCodeEnum.PARA_WORNING_NULL);
+            return resultData;
+        }
+        AreaInOutFlow inOutFlow = trackStayService.getInOutFlow();
+        if (inOutFlow != null ) {
+            resultData.setData(inOutFlow);
+            resultData.setResult(ResultCodeEnum.OK);
+        } else {
+            resultData.setResult(ResultCodeEnum.DB_FIND_FAILURE);
+        }
         return resultData;
     }
 
