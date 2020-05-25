@@ -29,13 +29,19 @@ import java.util.*;
  * 3. 遍历数据，向矩阵中填值
  */
 public class OdMatrix {
+    private final SparkSession spark;
+
+    public OdMatrix(SparkSession spark) {
+        this.spark = spark;
+    }
+
     public static void main(String[] args) {
         // spark配置文件
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-        OdMatrix od = new OdMatrix();
-        od.save(spark, "2018-10-01-00", "2018-10-03-00");
+        OdMatrix od = new OdMatrix(spark);
+        od.save("2018-10-01-00", "2018-10-03-00");
 //        // 计算Od矩阵
 //        int[][] odMatrix = od.odCalculate(spark, "2018-10-01-00", "2018-10-03-00");
 //        for (int[] matrix : odMatrix) {
@@ -50,8 +56,8 @@ public class OdMatrix {
 //        System.out.println(areaInflowAndOutFlow);
     }
 
-    public void save(SparkSession spark, String startTime,String endTime){
-        JavaPairRDD<Tuple2<Integer, Integer>, Integer> userOdListRdd = getAreaOdMatrix(spark, startTime, endTime);
+    public void save(String startTime, String endTime) {
+        JavaPairRDD<Tuple2<Integer, Integer>, Integer> userOdListRdd = getAreaOdMatrix(startTime, endTime);
         JavaRDD<Row> odRow = userOdListRdd.map(x -> RowFactory.create(x._1._1, x._1._2, x._2));
         StructType schema = new StructType(new StructField[]{
                 new StructField("start_id", DataTypes.IntegerType, true, Metadata.empty()),
@@ -63,9 +69,9 @@ public class OdMatrix {
         trackDf.write().format("jdbc").mode(SaveMode.Overwrite)
                 .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data?rewriteBatchedStatements=true")
                 .option("dbtable", "od_matrix")
-                .option("batchsize",10000)
-                .option("isolationLevel","NONE")
-                .option("truncate","false")
+                .option("batchsize", 10000)
+                .option("isolationLevel", "NONE")
+                .option("truncate", "false")
                 .option("user", "root").option("password", "root").save();
     }
 
@@ -74,17 +80,17 @@ public class OdMatrix {
      * 1. 获取一段时间内的用户数据
      * 2. 将用户轨迹点与划分的轨迹切分路径区分
      * 4. 计算Od矩阵
-     * @param spark spark上下文对象
+     *
      * @param startTime
      * @param endTime
      * @return
      */
-    public int[][] odCalculate(SparkSession spark, String startTime,String endTime){
-        JavaPairRDD<Tuple2<Integer, Integer>, Integer> userOdListRdd = getAreaOdMatrix(spark, startTime, endTime);
+    public int[][] odCalculate(String startTime, String endTime) {
+        JavaPairRDD<Tuple2<Integer, Integer>, Integer> userOdListRdd = getAreaOdMatrix(startTime, endTime);
         int communityNumber = Constant.ZOOM_NUM;
         JavaPairRDD<Integer, Integer> inflowRdd = userOdListRdd.mapToPair(row -> new Tuple2<>(row._1._1, row._2)).reduceByKey((x1, x2) -> x1 + x2);
         JavaPairRDD<Integer, Integer> outflowRdd = userOdListRdd.mapToPair(row -> new Tuple2<>(row._1._2, row._2)).reduceByKey((x1, x2) -> x1 + x2);
-        int [][] odMatrix = new int[communityNumber+1][communityNumber+1];
+        int[][] odMatrix = new int[communityNumber + 1][communityNumber + 1];
         int sum = 0;
         for (Tuple2<Tuple2<Integer, Integer>, Integer> index : userOdListRdd.collect()) {
             odMatrix[index._1._1][index._1._2] = index._2;
@@ -100,17 +106,17 @@ public class OdMatrix {
         return odMatrix;
     }
 
-    private JavaPairRDD<Tuple2<Integer, Integer>, Integer> getAreaOdMatrix(SparkSession spark, String startTime,String endTime){
-        TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision();
-        JavaPairRDD<String, Integer> mapCommunityRdd = trafficZoneDivision.divisionTrafficZoneByKmeans(spark);
+    private JavaPairRDD<Tuple2<Integer, Integer>, Integer> getAreaOdMatrix(String startTime, String endTime) {
+        TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision(spark);
+        JavaPairRDD<String, Integer> mapCommunityRdd = trafficZoneDivision.divisionTrafficZoneByKmeans();
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
         // 获取初始数据
         JavaRDD<Row> cleanedRdd = new Init(spark).init()
                 .javaRDD() // 转化为RDD
-                .filter(row->{ // 筛选出特定时间段内的数据
+                .filter(row -> { // 筛选出特定时间段内的数据
                     long time = Long.parseLong((String) row.get(0));
-                    if ((DateUtil.getDayHour(startTime)<time)&&(time<DateUtil.getDayHour(endTime))){
+                    if ((DateUtil.getDayHour(startTime) < time) && (time < DateUtil.getDayHour(endTime))) {
                         return true;
                     } else {
                         return false;
@@ -162,50 +168,50 @@ public class OdMatrix {
         return userOdListRdd;
     }
 
-    public Map<String, List<InOutTimeNumber>> getAreaInflowAndOutFlow(SparkSession spark, String startTime){
-        long interval = 1000*60*60;// 4小时
-        System.out.println(startTime+"--"+startTime.split("-")[2]);
+    public Map<String, List<InOutTimeNumber>> getAreaInflowAndOutFlow(String startTime) {
+        long interval = 1000 * 60 * 60;// 4小时
+        System.out.println(startTime + "--" + startTime.split("-")[2]);
 
-        return getAreaInflowAndOutFlow(spark,startTime,DateUtil.getDateFormatHour(DateUtil.getDayHour(startTime)+1000*60*60*24),interval);
+        return getAreaInflowAndOutFlow(startTime, DateUtil.getDateFormatHour(DateUtil.getDayHour(startTime) + 1000 * 60 * 60 * 24), interval);
     }
 
-    public Map<String, List<InOutTimeNumber>> getAreaInflowAndOutFlow(SparkSession spark, String startTime,String endTime){
-        long interval = 1000*60*60;// 4小时
-        return getAreaInflowAndOutFlow(spark,startTime,endTime,interval);
+    public Map<String, List<InOutTimeNumber>> getAreaInflowAndOutFlow(String startTime, String endTime) {
+        long interval = 1000 * 60 * 60;// 4小时
+        return getAreaInflowAndOutFlow(startTime, endTime, interval);
     }
 
-    public Map<String, List<InOutTimeNumber>> getAreaInflowAndOutFlow(SparkSession spark, String startTime,long interval){
-        return getAreaInflowAndOutFlow(spark,startTime,DateUtil.getDateFormatHour(DateUtil.getDayHour(startTime)+1000*60*60*24),interval);
+    public Map<String, List<InOutTimeNumber>> getAreaInflowAndOutFlow(String startTime, long interval) {
+        return getAreaInflowAndOutFlow(startTime, DateUtil.getDateFormatHour(DateUtil.getDayHour(startTime) + 1000 * 60 * 60 * 24), interval);
     }
 
     /**
      * 计算每个小区在一定时间内的人口流入流出量
      * 上方为三个方法重构，实现默认参数的效果，endTime默认为一天后，interval默认为一小时
-     * @param spark spark上下文对象
+     *
      * @param startTime 开始时间
-     * @param endTime 结束时间，默认为一天后
-     * @param interval 时间间隔，默认为一小时
-     * @return Map<String, List<InOutTimeNumber>>
-     *     返回结果为一个Map，map的key为 community-id 的形式，如: community-0
-     *     map的value为一个list，list内容为每个时间切片内的小区的人口流入流出量，数据类型为InOutTimeNumber
-     *     InOutTimeNumber有三个参数，分别为：timestamp，inflow，outflow
+     * @param endTime   结束时间，默认为一天后
+     * @param interval  时间间隔，默认为一小时
+     * @return Map<String, List < InOutTimeNumber>>
+     * 返回结果为一个Map，map的key为 community-id 的形式，如: community-0
+     * map的value为一个list，list内容为每个时间切片内的小区的人口流入流出量，数据类型为InOutTimeNumber
+     * InOutTimeNumber有三个参数，分别为：timestamp，inflow，outflow
      */
-    public Map<String, List<InOutTimeNumber>> getAreaInflowAndOutFlow(SparkSession spark, String startTime,String endTime, long interval){
+    public Map<String, List<InOutTimeNumber>> getAreaInflowAndOutFlow(String startTime, String endTime, long interval) {
         long dateFormat = DateUtil.getDayHour(startTime);
-        int time = (int) ((DateUtil.getDayHour(endTime) - DateUtil.getDayHour(startTime))/interval);
-        Map<String,List<InOutTimeNumber>> communityCrowd = new HashMap<>();
-        for (int i=0;i<time;i++){
+        int time = (int) ((DateUtil.getDayHour(endTime) - DateUtil.getDayHour(startTime)) / interval);
+        Map<String, List<InOutTimeNumber>> communityCrowd = new HashMap<>();
+        for (int i = 0; i < time; i++) {
 //            System.out.println(DateUtil.getDateFormatHour(dateFormat + interval * i));
 //            System.out.println(DateUtil.getDateFormatHour(dateFormat + interval * (i + 1)));
-            int[][] odMatrix = odCalculate(spark, DateUtil.getDateFormatHour(dateFormat + interval * i), DateUtil.getDateFormatHour(dateFormat + interval * (i + 1)));
-            for (int j=0;j<Constant.ZOOM_NUM;j++){
+            int[][] odMatrix = odCalculate(DateUtil.getDateFormatHour(dateFormat + interval * i), DateUtil.getDateFormatHour(dateFormat + interval * (i + 1)));
+            for (int j = 0; j < Constant.ZOOM_NUM; j++) {
                 List<InOutTimeNumber> communityList = communityCrowd.get("community-" + j);
-                if (communityList==null){
+                if (communityList == null) {
                     communityList = new ArrayList<>();
                 }
-                communityList.add(new InOutTimeNumber(dateFormat + interval * i,odMatrix[Constant.ZOOM_NUM][j],odMatrix[j][Constant.ZOOM_NUM]));
+                communityList.add(new InOutTimeNumber(dateFormat + interval * i, odMatrix[Constant.ZOOM_NUM][j], odMatrix[j][Constant.ZOOM_NUM]));
 //                System.out.println("community-" + j+"---"+communityList);
-                communityCrowd.put("community-" + j,communityList);
+                communityCrowd.put("community-" + j, communityList);
             }
         }
         return communityCrowd;

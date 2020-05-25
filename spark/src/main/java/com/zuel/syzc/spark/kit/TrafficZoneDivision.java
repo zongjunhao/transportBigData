@@ -8,15 +8,8 @@ import org.apache.spark.mllib.clustering.KMeans;
 import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
-import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.Metadata;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
-import org.junit.Test;
 import scala.Tuple2;
 
 /**
@@ -24,8 +17,13 @@ import scala.Tuple2;
  */
 @SuppressWarnings("unused")
 public class TrafficZoneDivision {
+    private final SparkSession spark;
 
-    public JavaPairRDD<String, Integer> divisionTrafficZoneByKmeans(SparkSession spark) {
+    public TrafficZoneDivision(SparkSession spark) {
+        this.spark = spark;
+    }
+
+    public JavaPairRDD<String, Integer> divisionTrafficZoneByKmeans() {
 
         // Loads data.
         JavaRDD<Row> data = spark.read().format("csv").option("header", "true").load("in/服创大赛-基站经纬度数据.csv").toJavaRDD();
@@ -101,8 +99,8 @@ public class TrafficZoneDivision {
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-        TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision();
-        JavaPairRDD<String, Integer> result = trafficZoneDivision.divisionTrafficZoneByKmeans(spark);
+        TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision(spark);
+        JavaPairRDD<String, Integer> result = trafficZoneDivision.divisionTrafficZoneByKmeans();
         result.collect().forEach(System.out::println);
     }
 }
