@@ -34,13 +34,19 @@ import java.util.*;
  * 5. Kmeans聚类，识别出行方式
  */
 public class TrackAnalysis {
+    private final SparkSession spark;
+
+    public TrackAnalysis(SparkSession spark) {
+        this.spark = spark;
+    }
+
     public static void main(String[] args) {
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-        new TrackAnalysis().trackAnalysis(spark);
+        new TrackAnalysis(spark).trackAnalysis();
     }
 
-    public void trackAnalysis(SparkSession spark){
+    public void trackAnalysis(){
         // (userId, List(time, cellId, longitude, latitude))
         JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedRdd = new CleanErraticData(spark).cleanErraticData();
         /*
@@ -91,7 +97,7 @@ public class TrackAnalysis {
                     if (trackerList.get(end)._1() - trackerList.get(start)._1() > 1000 * 60 * 30) {
                         trackerFeature = CalculateFeature.calculateFeature(trackerV, userId + "-" + travel + "-" + tracker);
                         if (trackerFeature != null)
-                            trackerFeatureList.add(new Tuple3<>(trackerFeature,
+                            trackerFeatureList.add(new Tuple3<TrackFeature, TrackStation, TrackStation>(trackerFeature,
                                     new TrackStation(trackerList.get(travelStart)._2(), trackerList.get(travelStart)._1()),
                                     new TrackStation(trackerList.get(i)._2(), trackerList.get(i)._1())));
                         travelStart = i;
@@ -101,7 +107,7 @@ public class TrackAnalysis {
                     } else if (Math.abs(beforeV - afterV) > 10 && trackerList.get(end)._1() - trackerList.get(start)._1() < 1000 * 60 * 10) {
                         trackerFeature = CalculateFeature.calculateFeature(trackerV, userId + "-" + travel + "-" + tracker);
                         if (trackerFeature != null)
-                            trackerFeatureList.add(new Tuple3<>(trackerFeature,
+                            trackerFeatureList.add(new Tuple3<TrackFeature, TrackStation, TrackStation>(trackerFeature,
                                     new TrackStation(trackerList.get(travelStart)._2(), trackerList.get(travelStart)._1()),
                                     new TrackStation(trackerList.get(i)._2(), trackerList.get(i)._1())));
                         travelStart = i;
@@ -111,7 +117,7 @@ public class TrackAnalysis {
                 } else if (Math.abs(beforeV - afterV) > 20 && beforeV < 80 && afterV < 80) {
                     trackerFeature = CalculateFeature.calculateFeature(trackerV, userId + "-" + travel + "-" + tracker);
                     if (trackerFeature != null)
-                        trackerFeatureList.add(new Tuple3<>(trackerFeature,
+                        trackerFeatureList.add(new Tuple3<TrackFeature, TrackStation, TrackStation>(trackerFeature,
                                 new TrackStation(trackerList.get(travelStart)._2(), trackerList.get(travelStart)._1()),
                                 new TrackStation(trackerList.get(i)._2(), trackerList.get(i)._1())));
                     travelStart = i;

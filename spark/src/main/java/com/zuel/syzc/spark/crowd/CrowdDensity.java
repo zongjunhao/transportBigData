@@ -21,6 +21,11 @@ import java.util.*;
 
 public class CrowdDensity {
     private GetCells getCells;
+    private final SparkSession spark;
+
+    public CrowdDensity(SparkSession spark) {
+        this.spark = spark;
+    }
 
     public static void main(String[] args) {
         // spark配置文件
@@ -28,7 +33,7 @@ public class CrowdDensity {
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         // 调用算法,计算在某个原型区域内的流入流出人数
-        String crowdFlow = new CrowdDensity().crowdInflowAndOutflow(spark, "2018-10-02-09", "2018-10-03-12", 123.4159698, 41.80778122, 1000);
+        String crowdFlow = new CrowdDensity(spark).crowdInflowAndOutflow("2018-10-02-09", "2018-10-03-12", 123.4159698, 41.80778122, 1000.0);
         System.out.println(crowdFlow);
         // 计算在某个指定多边形区域内的流入流出人数
 //        List<BaseStationPoint> points = new ArrayList<>();
@@ -44,25 +49,23 @@ public class CrowdDensity {
 
     /**
      * 判断某个时间段，在某个自定义多边形内的人口流动情况
-     * @param spark spark上下文对象
      * @param startTime 起始时间
      * @param endTime 结束时间
      * @param points 自定义多边形的顶点
      * @return 输入人口数和输出人口数
      */
-    public String crowdInflowAndOutflow(SparkSession spark, String startTime,String endTime,List<BaseStationPoint> points) {
+    public String crowdInflowAndOutflow(String startTime,String endTime,List<BaseStationPoint> points) {
         getCells = new GetCells(spark);
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
         // 获取在某个区域内的基站Id，返回的是List(CellId,flag)
         JavaPairRDD<String, Integer> cellListRdd = sc.parallelizePairs(getCells.getCellsInPolygon(points));
-        String result = calculateInflowAndOutFlow(spark, startTime, endTime, cellListRdd);
+        String result = calculateInflowAndOutFlow(startTime, endTime, cellListRdd);
         return result;
     }
 
     /**
      * 判断某个时间段，在某个圆形区域内的人口流动情况
-     * @param spark spark上下文对象
      * @param startTime 起始时间
      * @param endTime 结束时间
      * @param longitude 中心点经度
@@ -70,25 +73,24 @@ public class CrowdDensity {
      * @param radius 中心点半径
      * @return 输入人口量和输出人口量
      */
-    public String crowdInflowAndOutflow(SparkSession spark, String startTime,String endTime,double longitude, double latitude, double radius) {
+    public String crowdInflowAndOutflow(String startTime,String endTime,double longitude, double latitude, double radius) {
         getCells = new GetCells(spark);
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
         // 获取在某个区域内的基站Id，返回的是List(CellId,flag)
         JavaPairRDD<String, Integer> cellListRdd = sc.parallelizePairs(getCells.getCellsInCircle(longitude,latitude,radius));
-        String result = calculateInflowAndOutFlow(spark, startTime, endTime, cellListRdd);
+        String result = calculateInflowAndOutFlow(startTime, endTime, cellListRdd);
         return result;
     }
 
     /**
      * 进行核心计算
-     * @param spark spark上下文对象
      * @param startTime 起始时间
      * @param endTime 结束时间
      * @param cellListRdd 已经标记好的cellList
      * @return inflow&outFlow
      */
-    private String calculateInflowAndOutFlow(SparkSession spark, String startTime,String endTime,JavaPairRDD<String, Integer> cellListRdd){
+    private String calculateInflowAndOutFlow(String startTime,String endTime,JavaPairRDD<String, Integer> cellListRdd){
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
         // 获取清洗后的数据集

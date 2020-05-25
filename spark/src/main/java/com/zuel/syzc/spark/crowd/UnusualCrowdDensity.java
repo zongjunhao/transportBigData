@@ -17,10 +17,9 @@ import scala.Tuple3;
 import scala.Tuple4;
 import scala.Tuple5;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 /**
@@ -36,6 +35,11 @@ import java.util.stream.Stream;
  * -> 动态计算阈值T，若Sx-S>T则视为异常聚集，T的计算分两种情况，若有异常聚集的情况，则通过公式计算，若没有异常聚集的情况，则T = 1.5S
  */
 public class UnusualCrowdDensity {
+    private final SparkSession spark;
+
+    public UnusualCrowdDensity(SparkSession spark) {
+        this.spark = spark;
+    }
 
     private StructType schema = new StructType(new StructField[]{
             new StructField("day", DataTypes.StringType, true, Metadata.empty()),
@@ -49,10 +53,10 @@ public class UnusualCrowdDensity {
     public static void main(String[] args) {
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-        UnusualCrowdDensity unusualCrowdDensity = new UnusualCrowdDensity();
+        UnusualCrowdDensity unusualCrowdDensity = new UnusualCrowdDensity(spark);
         JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = new CleanErraticData(spark).getFilledRdd();
 //        unusualCrowdDensity.computeHistoryPeople(spark,DateUtil.getTimestamp("2018-10-01 00:00:00.000"),DateUtil.getTimestamp("2018-10-03 23:00:00.000"),filledRdd);
-        JavaRDD<Row> rowJavaRDD = unusualCrowdDensity.judgeAbnormalCell(spark, DateUtil.getTimestamp("2018-10-03 23:00:00.000"), filledRdd);
+        JavaRDD<Row> rowJavaRDD = unusualCrowdDensity.judgeAbnormalCell(DateUtil.getTimestamp("2018-10-03 23:00:00.000"), filledRdd);
         rowJavaRDD.collect().forEach(System.out::println);
 //        unusualCrowdDensity.computeT(spark,DateUtil.getTimestamp("2018-10-03 20:00:00.000"));
     }
@@ -61,12 +65,11 @@ public class UnusualCrowdDensity {
 
     /**
      * 计算cell内历史人数
-     * @param spark SparkSession
      * @param startDay 起始日期
      * @param endDay 结束日期
      * @param filledRdd (userId,timestamp, cellId,  longitude, latitude)
      */
-    public void computeHistoryPeople(SparkSession spark,long startDay,long endDay,JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd){
+    public void computeHistoryPeople(long startDay,long endDay,JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd){
         /**
          * 输入 filledRdd (userId,timestamp, cellId,  longitude, latitude)
          * 1. filter 筛选出指定时间内的数据
@@ -122,11 +125,10 @@ public class UnusualCrowdDensity {
 
     /**
      * 计算阈值
-     * @param spark SparkSession
      * @param startDay 计算阈值的起始时间
      * @return JavaPairRDD<cellId, threshold>
      */
-    public JavaPairRDD<String, Double> computeT(SparkSession spark,long startDay){
+    public JavaPairRDD<String, Double> computeT(long startDay){
         String dayTime = ComputeKey.computeKey(startDay);
         Dataset<Row> cellCountAllDf = spark.read().format("jdbc")
                 .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
@@ -162,14 +164,14 @@ public class UnusualCrowdDensity {
         return thresholdRdd;
     }
 
-    public JavaRDD<Row> judgeAbnormalCell(SparkSession spark,long startDay,JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd){
+    public JavaRDD<Row> judgeAbnormalCell(long startDay,JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd){
 //        long startDay = DateUtil.getTimestamp("2018-10-03 23:00:00.000");
         String dayTime = ComputeKey.computeKey(startDay);
         String day = DateUtil.getDay(startDay);
         // 获取当前时间段内每个分区内的人数
         JavaPairRDD<String, Integer> cellCountNowRdd = cellCountRdd(startDay, filledRdd);
         // 从mysql中获取模型数据
-        JavaPairRDD<String, Double> thresholdAllRdd = computeT(spark, startDay);
+        JavaPairRDD<String, Double> thresholdAllRdd = computeT(startDay);
         // 将最新数据与历史数据连接，判断阈值
         JavaRDD<Row> newCellRow = cellCountNowRdd.leftOuterJoin(thresholdAllRdd).map(x -> {
             Integer countNow = x._2._1;
