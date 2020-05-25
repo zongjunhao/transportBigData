@@ -64,10 +64,11 @@ public class SparkEntry {
 
     @Test
     public void test() {
-        String[] paramsArray = {"aaa", "bbb", "ccc"};
+        String[] paramsArray = {"aaa", null, "ccc"};
         System.out.println("paramsArray = " + Arrays.toString(paramsArray));
         String paramsString = String.join("#", paramsArray);
         System.out.println("paramsString = " + paramsString);
+        System.out.println("paramsArray[1] = " + paramsArray[1]);
         String[] splitString = paramsString.split("#");
         System.out.println("splitString = " + Arrays.toString(splitString));
     }

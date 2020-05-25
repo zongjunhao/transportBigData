@@ -2,15 +2,14 @@ package com.zuel.syzc.spark.kit;
 
 import com.zuel.syzc.spark.constant.Constant;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.mllib.clustering.KMeans;
 import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import scala.Tuple2;
+import scala.Tuple5;
+import scala.Tuple6;
 
 /**
  * @author zongjunhao
@@ -23,15 +22,16 @@ public class TrafficZoneDivision {
         this.spark = spark;
     }
 
-    public JavaPairRDD<String, Integer> divisionTrafficZoneByKmeans() {
-
+    public JavaRDD<Tuple6<String, Integer, Double, Double, Long, Integer>> divisionTrafficZoneByKmeans() {
+        // Loads stay data.
+        JavaRDD<Tuple5<String, Integer, Double, Double, Long>> stdbscan = new DBSCAN(spark).stdbscan( null, null);
         // Loads data.
-        JavaRDD<Row> data = spark.read().format("csv").option("header", "true").load("in/服创大赛-基站经纬度数据.csv").toJavaRDD();
+        // JavaRDD<Row> data = spark.read().format("csv").option("header", "true").load("in/服创大赛-基站经纬度数据.csv").toJavaRDD();
 
-        JavaRDD<Vector> parsedData = data.map(row -> {
+        JavaRDD<Vector> parsedData = stdbscan.map(row -> {
             double[] values = new double[2];
-            values[0] = Double.parseDouble(row.getString(0));
-            values[1] = Double.parseDouble(row.getString(1));
+            values[0] = row._3();
+            values[1] = row._4();
             return Vectors.dense(values);
         });
         parsedData.cache();
@@ -53,14 +53,14 @@ public class TrafficZoneDivision {
         double withinSetSumOfSquaredErrors = clusters.computeCost(parsedData.rdd());
 //        System.out.println("Within Set Sum of Squared Errors = " + withinSetSumOfSquaredErrors);
 
-        JavaPairRDD<String, Integer> result = data.mapToPair(row -> {
+        JavaRDD<Tuple6<String, Integer, Double, Double, Long, Integer>> result = stdbscan.map(row->{
             double[] values = new double[2];
-            values[0] = Double.parseDouble(row.getString(0));
-            values[1] = Double.parseDouble(row.getString(1));
+            values[0] = row._3();
+            values[1] = row._4();
             Integer predictResult = clusters.predict(Vectors.dense(values));
-
-            return new Tuple2<>(row.getString(2).split("-")[1], predictResult);
+            return new Tuple6<>(row._1(), row._2(), row._3(), row._4(), row._5(), predictResult);
         });
+
 //        result.collect().forEach(System.out::println);
         return result;
 
@@ -100,7 +100,7 @@ public class TrafficZoneDivision {
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision(spark);
-        JavaPairRDD<String, Integer> result = trafficZoneDivision.divisionTrafficZoneByKmeans();
+        JavaRDD<Tuple6<String, Integer, Double, Double, Long, Integer>> result = trafficZoneDivision.divisionTrafficZoneByKmeans();
         result.collect().forEach(System.out::println);
     }
 }

@@ -17,6 +17,10 @@ public class SparkSubmit {
     @Autowired
     private TaskDao taskDao;
 
+    public static void main(String[] args) {
+
+    }
+
     public int submit(int taskType, String[] params) {
         String[] jarParam = {String.valueOf(taskType), String.join("#", params)};
         Task task = new Task();
