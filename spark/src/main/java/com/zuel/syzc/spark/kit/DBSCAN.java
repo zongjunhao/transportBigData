@@ -22,29 +22,52 @@ import org.apache.spark.sql.types.StructType;
 import scala.Tuple2;
 import scala.Tuple3;
 import scala.Tuple5;
-import shapeless.Tuple;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DBSCAN {
+    private SparkSession spark;
+    public DBSCAN(SparkSession spark) {
+        this.spark = spark;
+    }
 
     public static void main(String[] args) {
         // spark配置文件
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-        new DBSCAN().dbscan(spark,null,null);
-
-
+        JavaRDD<Tuple5<String, Integer, Double, Double, Long>> stdbscan = new DBSCAN(spark).stdbscan( null, null);
+        System.out.println("size:"+stdbscan.collect().size());
+        stdbscan.collect().forEach(System.out::println);
     }
 
-    public void dbscan(SparkSession spark,String startTime,String endTime){
+    /**
+     * 基于时空聚类
+     * 1. 对每个用户，先使用dbscan聚类
+     * 2. 基于KNN思想，对聚类点进行调整
+     * 3. 将将用户的轨迹基于时间层面重新聚类
+     * @param startTime 起始时间,可以为空
+     * @param endTime 结束时间，可以为空
+     * @return
+     */
+    public JavaRDD<Tuple5<String, Integer, Double, Double, Long>> stdbscan(Long startTime,Long endTime){
         JavaRDD<Tuple5<String, Long, String, String, String>> filledRdd = new CleanErraticData(spark).getFilledRdd();
-        filledRdd.groupBy(x->x._1()).foreach(x->{
-            System.out.println(x._1);
+        JavaRDD<Tuple5<String, Long, String, String, String>> filteredRdd = filledRdd.filter(x -> {
+            if (startTime == null && endTime == null) {
+                return true;
+            } else if(startTime == null) {
+                return x._2() < endTime;
+            } else if(endTime == null) {
+                return x._2() >= startTime;
+            } else {
+                return x._2() > startTime && x._2() < endTime;
+            }
+        });
+        JavaRDD<Tuple5<String, Integer, Double, Double, Long>> finalUserClusterRdd = filteredRdd.groupBy(x -> x._1()).flatMap(x -> {
+            String userId = x._1;
+//            System.out.println(x._1);
             List<Tuple5<String, Long, String, String, String>> list = IteratorUtils.toList(x._2.iterator());
             // eps停留点判别距离阈值(单位：米)；minPts停留点判别时间阈值(单位：分钟)
             DBSCANClusterer dbscanClusterer = new DBSCANClusterer(0.05, 3);
@@ -79,12 +102,79 @@ public class DBSCAN {
                     .collect(Collectors.toMap((i) -> new Tuple2<>(i._1().toString(), i._2().toString()), i -> i));
             // 在用户的轨迹中筛选出聚类出的点
             List<UserCluster> userClusterList = list.stream()
-                    .filter(i -> clusterMap.get(new Tuple2<>(i._4(), i._5())) != null)
-                    .map(i -> new UserCluster(i._1(), i._3(), i._4(), i._5(), i._2(), clusterMap.get(new Tuple2<>(i._4(), i._5()))._3())).collect(Collectors.toList());
-            for (int i=2;i<userClusterList.size()-2;i++) {
-
+//                    .filter(i -> clusterMap.get(new Tuple2<>(i._4(), i._5())) != null)
+                    .map(i -> {
+                        int cluster = -1;
+                        if (clusterMap.get(new Tuple2<>(i._4(), i._5())) != null)
+                            cluster = clusterMap.get(new Tuple2<>(i._4(), i._5()))._3();
+                        return new UserCluster(i._1(), i._3(), i._4(), i._5(), i._2(), cluster);
+                    })
+                    .sorted(Comparator.comparing(UserCluster::getTimestamp))
+                    .collect(Collectors.toList());
+            // KNN ！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+            int k = 4, maxCluster = (k + 2) / 2;
+            for (int i = k / 2; i < userClusterList.size() - k / 2; i++) {
+//                System.out.println(i+"----------------------------");
+                Map<Integer, Integer> clusterCounter = new HashMap<>();
+                // 获取k个
+                for (int a = i - k / 2; a < i + k / 2 + 1; a++) {
+                    if (a != i) {
+                        Integer cId = userClusterList.get(a).getCluster();
+                        if (clusterCounter.containsKey(cId)) {// 更新值
+                            clusterCounter.put(cId, clusterCounter.get(cId) + 1);
+                        } else {
+                            clusterCounter.put(cId, 1);
+                        }
+                    }
+                }
+                // 对所有的聚类点根据value排序
+                List<Map.Entry<Integer, Integer>> sortedMap = new ArrayList<>(clusterCounter.entrySet()).stream()
+                        .sorted(Comparator.comparing(Map.Entry::getValue))
+                        .collect(Collectors.toList());
+                // 如果最大的聚类点不是当前这个类，且不是异常类，且大小大于maxCluster
+                // 就将这个类的中心点设为最大中心点，经纬度设为聚类中心的经纬度
+                if (!userClusterList.get(i).getCluster().equals(sortedMap.get(sortedMap.size() - 1).getKey())
+                        && sortedMap.get(sortedMap.size() - 1).getKey() >= 0
+                        && sortedMap.get(sortedMap.size() - 1).getValue() > maxCluster) {
+                    UserCluster userCluster = userClusterList.get(i);
+                    Integer newCluster = sortedMap.get(sortedMap.size() - 1).getKey();
+                    userCluster.setCluster(newCluster);
+                    Tuple2<Double, Double> newClusterPosition = clusterCenterMap.get(newCluster);
+                    userCluster.setLongitude(newClusterPosition._1.toString());
+                    userCluster.setLatitude(newClusterPosition._2.toString());
+                }
             }
+
+            // 时间层面聚类！！！！！！！！！！！！！！
+            // 根据时间段，重新划分聚类
+            List<List<UserCluster>> newUserClusterListAll = new ArrayList<>();
+            List<UserCluster> temp = new ArrayList<>();
+            for (int i = 0; i < userClusterList.size(); i++) {
+                if (i == 0) {
+                    temp.add(userClusterList.get(i));
+                } else {
+                    if (userClusterList.get(i).getCluster().equals(userClusterList.get(i - 1).getCluster())) {
+                        temp.add(userClusterList.get(i));
+                    } else {
+                        newUserClusterListAll.add(temp);
+                        temp = new ArrayList<>();
+                        temp.add(userClusterList.get(i));
+                    }
+                }
+            }
+            newUserClusterListAll.add(temp);
+            // 重新计算聚类中心
+            m.set(0);
+            List<Tuple5<String, Integer, Double, Double, Long>> finalCluster = newUserClusterListAll.stream()
+                    .filter(i -> i.get(0).getCluster() >= 0)
+                    .map(i -> {
+                        double longitude = i.stream().mapToDouble(s -> Double.parseDouble(s.getLongitude())).average().getAsDouble();
+                        double latitude = i.stream().mapToDouble(s -> Double.parseDouble(s.getLatitude())).average().getAsDouble();
+                        return new Tuple5<>(userId, m.getAndIncrement(), longitude, latitude, i.get(0).getTimestamp());
+                    }).collect(Collectors.toList());
+            return finalCluster.iterator();
         });
+        return finalUserClusterRdd;
     }
 
     public void current(SparkSession spark){
