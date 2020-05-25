@@ -20,13 +20,18 @@ class ApplicationTests {
 
     @Test
     void test(){
+        // Task task = new Task();
+        // task.setTaskType("1");
+        // task.setStartTime(new Date());
+        // task.setParams("params");
+        // task.setStatus("unfinished");
+        // taskDao.insert(task);
+        // System.out.println(task);
+        // System.out.println(task.getTaskid());
         Task task = new Task();
-        task.setTaskType("1");
-        task.setStartTime(new Date());
-        task.setParams("params");
-        task.setStatus("unfinished");
-        taskDao.insert(task);
-        System.out.println(task);
-        System.out.println(task.getTaskid());
+        task.setTaskid(5);
+        task.setEndTime(new Date());
+        task.setStatus("finished");
+        taskDao.updateById(task);
     }
 }

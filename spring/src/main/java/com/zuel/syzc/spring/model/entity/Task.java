@@ -12,7 +12,7 @@ import java.util.Date;
 @ToString
 @TableName(value = "task")
 public class Task {
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(value = "taskid", type = IdType.AUTO)
     private Integer taskid;
     private Date startTime;
     private Date endTime;

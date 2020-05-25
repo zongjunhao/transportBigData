@@ -1,18 +1,36 @@
 package com.zuel.syzc.spring.utils;
 
 import com.zuel.syzc.spring.constant.Constant;
+import com.zuel.syzc.spring.dao.TaskDao;
+import com.zuel.syzc.spring.model.entity.Task;
 import org.apache.spark.launcher.SparkLauncher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.UUID;
 
+@Component
 public class SparkSubmit {
-    public static void submit(int taskType, String[] params) throws IOException, InterruptedException {
+
+    @Autowired
+    private TaskDao taskDao;
+
+    public int submit(int taskType, String[] params) {
         String[] jarParam = {String.valueOf(taskType), String.join("#", params)};
-        launch(jarParam);
+        Task task = new Task();
+        task.setTaskType(jarParam[0]);
+        task.setParams(jarParam[1]);
+        task.setStatus("unfinished");
+        task.setStartTime(new Date());
+        taskDao.insert(task);
+        int taskId = task.getTaskid();
+        new Thread(() -> launch(taskId, jarParam)).start();
+        return taskId;
     }
 
-    public static int launch(String[] jarParam) throws IOException, InterruptedException {
+    public void launch(int taskId, String[] jarParam) {
         // String[] param = new String[]{
         //         "zjh", "zjh"
         // };
@@ -36,18 +54,38 @@ public class SparkSubmit {
         launcher.setConf("spark.executor.instances", String.valueOf(16));
         launcher.setSparkHome(Constant.SPARK_HOME);
 
-        Process process =launcher.launch();
-        InputStreamReaderRunnable inputStreamReaderRunnable = new InputStreamReaderRunnable(process.getInputStream(), "input");
-        Thread inputThread = new Thread(inputStreamReaderRunnable, "LogStreamReader input");
-        inputThread.start();
+        try {
+            Process process = launcher.launch();
+            InputStreamReaderRunnable inputStreamReaderRunnable = new InputStreamReaderRunnable(process.getInputStream(), "input");
+            Thread inputThread = new Thread(inputStreamReaderRunnable, "LogStreamReader input");
+            inputThread.start();
 
-        InputStreamReaderRunnable errorStreamReaderRunnable = new InputStreamReaderRunnable(process.getErrorStream(), "error");
-        Thread errorThread = new Thread(errorStreamReaderRunnable, "LogStreamReader error");
-        errorThread.start();
+            InputStreamReaderRunnable errorStreamReaderRunnable = new InputStreamReaderRunnable(process.getErrorStream(), "error");
+            Thread errorThread = new Thread(errorStreamReaderRunnable, "LogStreamReader error");
+            errorThread.start();
 
-        System.out.println("Waiting for finish...");
-        int exitCode = process.waitFor();
-        System.out.println("Finished! Exit code:" + exitCode);
-        return exitCode;
+            System.out.println("Waiting for finish...");
+            int exitCode = process.waitFor();
+            System.out.println("Finished! Exit code:" + exitCode);
+            Task task = new Task();
+            task.setTaskid(taskId);
+            task.setEndTime(new Date());
+            if (exitCode == 0) {
+                task.setStatus("finished");
+                taskDao.updateById(task);
+            } else {
+                task.setStatus("error");
+                taskDao.updateById(task);
+                launch(taskId, jarParam);
+            }
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+            Task task = new Task();
+            task.setTaskid(taskId);
+            task.setEndTime(new Date());
+            task.setStatus("error");
+            taskDao.updateById(task);
+            launch(taskId, jarParam);
+        }
     }
 }
