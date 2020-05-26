@@ -15,6 +15,7 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import scala.Tuple2;
+import scala.Tuple6;
 
 import java.util.*;
 
@@ -108,32 +109,36 @@ public class OdMatrix {
 
     private JavaPairRDD<Tuple2<Integer, Integer>, Integer> getAreaOdMatrix(String startTime, String endTime) {
         TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision(spark);
-        JavaPairRDD<String, Integer> mapCommunityRdd = trafficZoneDivision.divisionTrafficZoneByKmeans();
+        JavaRDD<Tuple6<String, Integer, Double, Double, Long, Integer>> divisionRdd = trafficZoneDivision.divisionTrafficZoneByKmeans();
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
+
         // 获取初始数据
-        JavaRDD<Row> cleanedRdd = new Init(spark).init()
-                .javaRDD() // 转化为RDD
-                .filter(row -> { // 筛选出特定时间段内的数据
-                    long time = Long.parseLong((String) row.get(0));
-                    if ((DateUtil.getDayHour(startTime) < time) && (time < DateUtil.getDayHour(endTime))) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
+//        JavaRDD<Row> cleanedRdd = new Init(spark).init()
+//                .javaRDD() // 转化为RDD
+//                .filter(row -> { // 筛选出特定时间段内的数据
+//                    long time = Long.parseLong((String) row.get(0));
+//                    if ((DateUtil.getDayHour(startTime) < time) && (time < DateUtil.getDayHour(endTime))) {
+//                        return true;
+//                    } else {
+//                        return false;
+//                    }
+//                });
         // 将清洗后的数据转化格式(cellId,(userId,time))，和经过分区后的数据(cellId, communityId)合并
         // 得到的数据格式为(cellId,((userId,time),communityId))
-        JavaPairRDD<String, Tuple2<Tuple2<String, Long>, Integer>> joinedRdd = cleanedRdd.mapToPair(row -> {
-            long time = Long.parseLong((String) row.get(0));
-            String userId = row.getString(1);
-            String cellId = row.getString(3);
-            return new Tuple2<>(cellId, new Tuple2<>(userId, time));
-        }).join(mapCommunityRdd);
+//        JavaPairRDD<String, Tuple2<Tuple2<String, Long>, Integer>> joinedRdd = cleanedRdd.mapToPair(row -> {
+//            long time = Long.parseLong((String) row.get(0));
+//            String userId = row.getString(1);
+//            String cellId = row.getString(3);
+//            return new Tuple2<>(cellId, new Tuple2<>(userId, time));
+//        }).join(mapCommunityRdd);
         // 将数据再次转化格式为(userId,(time,communityId))，然后根据userId分组
-        JavaPairRDD<String, Iterable<Tuple2<Long, Integer>>> userCommunityRdd = joinedRdd.mapToPair(row -> {
+        JavaPairRDD<String, Iterable<Tuple2<Long, Integer>>> userCommunityRdd = divisionRdd.filter(row -> { // 筛选出特定时间段内的数据
+            long time = row._5();
+            return (DateUtil.getDayHour(startTime) < time) && (time < DateUtil.getDayHour(endTime));
+        }).mapToPair(row -> {
             //(userId,(time,communityId))
-            return new Tuple2<>(row._2._1()._1(), new Tuple2<>(row._2._1()._2(), row._2._2()));
+            return new Tuple2<>(row._1(), new Tuple2<>(row._5(), row._6()));
         }).groupByKey();
         // 将用户的出行数据根据划分为一个一个的出行段(userId,List<startCommunityId,endCommunityId>)
         JavaPairRDD<String, List<Tuple2<Integer, Integer>>> userOdRdd = userCommunityRdd.mapToPair(row -> {
@@ -157,10 +162,7 @@ public class OdMatrix {
         JavaPairRDD<Tuple2<Integer, Integer>, Integer> OdAllRdd = userOdRdd
                 .flatMap(row -> row._2.iterator()) // 先进行扁平化处理
                 .filter(row -> { // 删除包含-1和起始点和重点相等的点
-                    if ((row._1 >= 0) && (row._2 >= 0) && (row._1 != row._2))
-                        return true;
-                    else
-                        return false;
+                    return (row._1 >= 0) && (row._2 >= 0) && (row._1 != row._2);
                 })
                 .mapToPair(row -> new Tuple2<>(new Tuple2<>(row._1, row._2), 1)); // 转化格式((开始点，结束点),1)，准备做wordCount
         // reduceByKey将相同key的值的数据相加在一起，相当于做了一次wordCount

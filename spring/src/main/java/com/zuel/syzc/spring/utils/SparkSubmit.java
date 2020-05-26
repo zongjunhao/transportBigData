@@ -18,7 +18,8 @@ public class SparkSubmit {
     private TaskDao taskDao;
 
     public static void main(String[] args) {
-
+        String [] params= {"0","666"};
+        new SparkSubmit().launch(0,params);
     }
 
     public int submit(int taskType, String[] params) {
@@ -43,20 +44,27 @@ public class SparkSubmit {
         launcher.setAppResource(Constant.APP_JAR_PATH);
         // 设置spark driver主类，即appJar的主类
         launcher.setMainClass("com.zuel.syzc.spark.SparkEntry");
+        launcher.setAppName("name");
         // 添加传递给spark driver main方法的参数
         launcher.addAppArgs(jarParam);
         // 设置该spark application的master
         launcher.setMaster(Constant.MASTER); // 在yarn-cluster上启动，也可以再local[*]上
         // 关闭spark submit的详细报告
-        launcher.setVerbose(false);
+        launcher.setVerbose(true);
+//        launcher.setDeployMode("cluster");
         // 设置用于执行appJar的spark集群分配的driver、executor内存等参数
         launcher.setConf(SparkLauncher.DRIVER_MEMORY, "2g");
         launcher.setConf(SparkLauncher.EXECUTOR_MEMORY, "1g");
         launcher.setConf(SparkLauncher.EXECUTOR_CORES, String.valueOf(16));
+//        launcher.setConf("spark.app.name", "submit");
         launcher.setConf("spark.app.id", String.valueOf(UUID.randomUUID()));
         launcher.setConf("spark.default.parallelism", String.valueOf(128));
         launcher.setConf("spark.executor.instances", String.valueOf(16));
         launcher.setSparkHome(Constant.SPARK_HOME);
+//        launcher.setConf("yarn.resourcemanager.hostname","192.168.1.101");
+//        launcher.setConf("spark.driver.host","localhost");
+
+//        launcher.setDeployMode("cluster");
 
         try {
             Process process = launcher.launch();

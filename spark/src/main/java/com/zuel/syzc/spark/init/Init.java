@@ -43,9 +43,10 @@ public class Init {
      * @return 进行清洗和合并以后的数据表
      */
     public Dataset<Row> init(){
-        spark.read().format("csv").option("header","true").load("in/服创大赛-原始数据.csv").createOrReplaceTempView("raw_data");
+
+        spark.read().format("csv").option("header","true").load("hdfs://192.168.1.101:9000/in/服创大赛-原始数据.csv").createOrReplaceTempView("raw_data");
 //    spark.sql("select * from raw_data").show()
-        spark.read().format("csv").option("header","true").load("in/服创大赛-基站经纬度数据.csv").createOrReplaceTempView("longitude");
+        spark.read().format("csv").option("header","true").load("hdfs://192.168.1.101:9000/in/服创大赛-基站经纬度数据.csv").createOrReplaceTempView("longitude");
 //    spark.sql("select * from longitude").show()
         /**
          * sql语句内容

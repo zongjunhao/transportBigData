@@ -5,6 +5,7 @@ import com.zuel.syzc.spark.crowd.OdMatrix;
 import com.zuel.syzc.spark.crowd.UnusualCrowdDensity;
 import com.zuel.syzc.spark.init.CleanErraticData;
 import com.zuel.syzc.spark.kit.TrafficZoneDivision;
+import com.zuel.syzc.spark.test.DoTest;
 import com.zuel.syzc.spark.track.TrackAnalysis;
 import com.zuel.syzc.spark.util.DateUtil;
 import org.apache.spark.SparkConf;
@@ -22,14 +23,28 @@ public class SparkEntry {
     // private final static Logger logger = LoggerFactory.getLogger(SparkEntry.class);
 
     public static void main(String[] args) {
+
         // spark配置文件
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
+//        sparkConf
+//                .set("spark.executor.instance","2")
+//                .setJars(new String[]{"spark/target/spark-1.0-SNAPSHOT.jar"})
+//                // 设置executor的内存大小
+//                .set("spark.executor.memory", "512m")
+////                // 设置提交任务的yarn队列
+////                .set("spark.yarn.queue","spark")
+////                // 设置driver的ip地址
+//                .set("spark.driver.host","192.168.3.73");
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         String taskType = args[0];
         String params = args[1];
         String[] paramsArray = params.split("#");
         switch (taskType) {
+            case "0":
+                DoTest doTest = new DoTest(spark);
+                doTest.doTest();
+                break;
             case "1":   // 小区划分
                 TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision(spark);
                 trafficZoneDivision.divisionTrafficZoneByKmeans();
@@ -60,6 +75,7 @@ public class SparkEntry {
             default:
                 break;
         }
+
     }
 
     @Test
