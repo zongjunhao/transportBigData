@@ -94,6 +94,10 @@
   </div>
   <!-- / navbar -->
 
+  <!--  iframe-->
+  <iframe id="window" width=800px height=600px frameborder=0 scrolling=auto src="/html/echarts.html"></iframe>
+  <!--  iframe-->
+
   <!-- menu -->
   <div class="app-aside hidden-xs bg-dark">
     <div class="aside-wrap">
@@ -156,7 +160,7 @@
                   </a>
                 </li>
                 <li ui-sref-active="active">
-                  <a ui-sref="app.dashboard-v2">
+                  <a ui-sref="app.dashboard-v2" onclick="ODMatrix()" >
                     <span>出行OD矩阵(表格)</span>
                   </a>
                 </li>
@@ -184,6 +188,7 @@
               <ul class="nav nav-sub dk">
 
                 <li ui-sref-active="active">
+<!--                  <iframe src="/html/echarts.html" width="400px" height="150px" frameborder="0"scrolling="no"><span>个人(地图)</span></iframe>-->
                   <a href="/html/echarts.html" ui-sref="app.dashboard-v1">
                     <span>个人(地图)</span>
                   </a>
@@ -303,6 +308,10 @@
           });
         });
       }(jQuery);
+
+      function ODMatrix(){
+        $("#window").attr("src","/html/OD.html");
+      }
     </script>
 
 </body>
