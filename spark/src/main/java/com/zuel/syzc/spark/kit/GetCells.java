@@ -2,6 +2,7 @@ package com.zuel.syzc.spark.kit;
 
 import com.zuel.syzc.spark.entity.BaseStationPoint;
 import com.zuel.syzc.spark.entity.Rectangle;
+import com.zuel.syzc.spark.init.Init;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.ml.clustering.KMeans;
@@ -165,11 +166,12 @@ public class GetCells {
     private Iterator<Row> getData(SparkSession spark) {
 //        SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
 //        SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-        spark.read().format("csv").option("header", "true").load("in/服创大赛-基站经纬度数据.csv").createOrReplaceTempView("longitude");
-        Dataset<Row> dataset = spark.sql("select * from longitude");
+//        spark.read().format("csv").option("header", "true").load("in/服创大赛-基站经纬度数据.csv").createOrReplaceTempView("longitude");
+//        Dataset<Row> dataset = spark.sql("select * from longitude");
 //        CleanErraticData cleanErraticData = new CleanErraticData(spark);
 //        Dataset<Row> dataset = cleanErraticData.getFilledData();
-        return dataset.toLocalIterator();
+
+        return new Init(spark).getCell().toLocalIterator();
     }
 
     /**

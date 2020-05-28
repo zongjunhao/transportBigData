@@ -27,7 +27,7 @@ public class SystemController {
     private SystemService systemService;
     @RequestMapping("login")
     public ResultData login(String name, String password, HttpServletRequest request) {
-        System.out.println(name+"-"+password);
+//        System.out.println(name+"-"+password);
         resultData = new ResultData();
         User user = new User();
         user.setName(name);
@@ -97,7 +97,7 @@ public class SystemController {
         if (register) {
             resultData.setResult(ResultCodeEnum.REGISTER_SUCCESS);
         } else {
-            resultData.setResult(ResultCodeEnum.REGISTER_ERROR);
+            resultData.setResult(ResultCodeEnum.USER_HAVE_REGISTER);
         }
         return resultData;
     }

@@ -7,6 +7,8 @@ import com.zuel.syzc.spring.service.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class SystemServiceImpl implements SystemService {
     @Autowired
@@ -20,13 +22,12 @@ public class SystemServiceImpl implements SystemService {
         return userDao.selectOne(queryWrapper);
     }
 
-//    @Override
-//    public void logout() {
-//
-//    }
-
     @Override
     public boolean register(User user) {
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.eq("name",user.getName());
+        List<User> users = userDao.selectList(userQueryWrapper);
+        if (users.size()>0) return false;
         int insert = userDao.insert(user);
         return insert>0;
     }

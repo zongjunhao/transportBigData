@@ -24,7 +24,7 @@ public class SparkSubmit {
 
     public int submit(int taskType, String[] params) {
         String[] jarParam = {String.valueOf(taskType), String.join("#", params)};
-        Task task = new Task();
+        Task task = Task.builder().build();
         task.setTaskType(jarParam[0]);
         task.setParams(jarParam[1]);
         task.setStatus("unfinished");
@@ -79,7 +79,7 @@ public class SparkSubmit {
             System.out.println("Waiting for finish...");
             int exitCode = process.waitFor();
             System.out.println("Finished! Exit code:" + exitCode);
-            Task task = new Task();
+            Task task = Task.builder().build();
             task.setTaskid(taskId);
             task.setEndTime(new Date());
             if (exitCode == 0) {
@@ -92,7 +92,7 @@ public class SparkSubmit {
             }
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
-            Task task = new Task();
+            Task task = Task.builder().build();
             task.setTaskid(taskId);
             task.setEndTime(new Date());
             task.setStatus("error");

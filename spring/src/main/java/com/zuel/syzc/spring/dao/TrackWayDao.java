@@ -14,6 +14,11 @@ import java.util.List;
 public interface TrackWayDao extends BaseMapper<TrackWay> {
     @Select("select user_id,cell_id,longitude,latitude,timestamp,user_track_detail.track_id,track_way " +
             "from user_track_detail inner join track_way on user_track_detail.track_id = track_way.track_id " +
+            "where `timestamp` between ${startTime} and ${endTime}")
+    List<UserTrack> getUserTrackWay(Long startTime, Long endTime);
+
+    @Select("select user_id,cell_id,longitude,latitude,timestamp,user_track_detail.track_id,track_way " +
+            "from user_track_detail inner join track_way on user_track_detail.track_id = track_way.track_id " +
             "where user_id = #{userId} and `timestamp` between ${startTime} and ${endTime}")
     List<UserTrack> getTrackWay(String userId, Long startTime, Long endTime);
 }

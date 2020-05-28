@@ -43,12 +43,12 @@ public class TrackAnalysis {
     public static void main(String[] args) {
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-        new TrackAnalysis(spark).trackAnalysis();
+        new TrackAnalysis(spark).trackAnalysis(null,null);
     }
 
-    public void trackAnalysis(){
+    public void trackAnalysis(Long startTime,Long endTime){
         // (userId, List(time, cellId, longitude, latitude))
-        JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedRdd = new CleanErraticData(spark).cleanErraticData();
+        JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedRdd = new CleanErraticData(spark).cleanErraticData(startTime,endTime);
         /*
          * 轨迹划分
          * 1. 计算速度
@@ -58,9 +58,12 @@ public class TrackAnalysis {
          * 5. 识别点间的轨迹为travel，每条子轨迹进行唯一编号tID = userId_i
          * 6. 将数据根据轨迹分组，并计算每条轨迹的5个特征值
          */
-        JavaRDD<Tuple2<List<UserTrack>, List<Tuple3<TrackFeature, TrackStation, TrackStation>>>> mapRdd = cleanedRdd.map(x -> {
+        JavaRDD<Tuple2<List<UserTrack>, List<Tuple3<TrackFeature, TrackStation, TrackStation>>>> mapRdd = cleanedRdd.filter(x->x._2.size()>2).map(x -> {
             String userId = x._1;
             List<Tuple4<Long, String, String, String>> trackerList = x._2;
+//            if (trackerList.size()<2) {
+//                return null;
+//            }
             List<UserTrack> userTrackDetail = new ArrayList<>();
 //            List<Tuple5<Long, String, String, String, String>> velocityList = new ArrayList<>();
             int tracker = 0, travel = 0, start = 0, end, i = 0, travelStart = i;

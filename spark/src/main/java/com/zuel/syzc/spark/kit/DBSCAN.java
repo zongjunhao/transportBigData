@@ -53,19 +53,19 @@ public class DBSCAN {
      * @return
      */
     public JavaRDD<Tuple5<String, Integer, Double, Double, Long>> stdbscan(Long startTime,Long endTime){
-        JavaRDD<Tuple5<String, Long, String, String, String>> filledRdd = new CleanErraticData(spark).getFilledRdd();
-        JavaRDD<Tuple5<String, Long, String, String, String>> filteredRdd = filledRdd.filter(x -> {
-            if (startTime == null && endTime == null) {
-                return true;
-            } else if(startTime == null) {
-                return x._2() < endTime;
-            } else if(endTime == null) {
-                return x._2() >= startTime;
-            } else {
-                return x._2() > startTime && x._2() < endTime;
-            }
-        });
-        JavaRDD<Tuple5<String, Integer, Double, Double, Long>> finalUserClusterRdd = filteredRdd.groupBy(x -> x._1()).flatMap(x -> {
+        JavaRDD<Tuple5<String, Long, String, String, String>> filledRdd = new CleanErraticData(spark).getFilledRdd(startTime,endTime);
+//        JavaRDD<Tuple5<String, Long, String, String, String>> filteredRdd = filledRdd.filter(x -> {
+//            if (startTime == null && endTime == null) {
+//                return true;
+//            } else if(startTime == null) {
+//                return x._2() < endTime;
+//            } else if(endTime == null) {
+//                return x._2() >= startTime;
+//            } else {
+//                return x._2() > startTime && x._2() < endTime;
+//            }
+//        });
+        JavaRDD<Tuple5<String, Integer, Double, Double, Long>> finalUserClusterRdd = filledRdd.groupBy(x -> x._1()).flatMap(x -> {
             String userId = x._1;
 //            System.out.println(x._1);
             List<Tuple5<String, Long, String, String, String>> list = IteratorUtils.toList(x._2.iterator());
@@ -182,7 +182,7 @@ public class DBSCAN {
 
         JavaSparkContext sparkContext = new JavaSparkContext(spark.sparkContext());
 
-        Dataset<Row> filledData = new CleanErraticData(spark).getFilledData();
+        Dataset<Row> filledData = new CleanErraticData(spark).getFilledData(null,null);
 //        filledData.show();
 
         // 获取清洗并合并后的数据集即joined_data

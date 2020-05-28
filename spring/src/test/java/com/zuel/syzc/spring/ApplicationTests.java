@@ -3,6 +3,8 @@ package com.zuel.syzc.spring;
 import com.zuel.syzc.spark.SparkEntry;
 import com.zuel.syzc.spring.dao.TaskDao;
 import com.zuel.syzc.spring.model.entity.Task;
+import com.zuel.syzc.spring.service.CrowdDensityService;
+import com.zuel.syzc.spring.service.impl.CrowdDensityServiceImpl;
 import com.zuel.syzc.spring.utils.SparkSubmit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +20,14 @@ class ApplicationTests {
 
     @Autowired
     TaskDao taskDao;
+    @Autowired
+    private CrowdDensityService crowdDensityService;
 
     @Test
     void moduleTest(){
-//        String [] params= {"1","fff"};
-//        SparkEntry sparkEntry = new SparkEntry();
-//        sparkEntry.entry(params);
+        Long time = 1538578800000L;
+        int i = crowdDensityService.computeHistoryModel(time, null);
+        System.out.println("result:"+i);
     }
 
     @Test
@@ -34,6 +38,12 @@ class ApplicationTests {
 
     @Test
     void contextLoads() {
+        Task task = Task.builder().build();
+        task.setTaskType("5");
+        task.setParams(String.join("#", "666"));
+        task.setStatus("unfinished");
+        task.setStartTime(new Date());
+        taskDao.insert(task);
     }
 
     @Test
@@ -46,7 +56,7 @@ class ApplicationTests {
         // taskDao.insert(task);
         // System.out.println(task);
         // System.out.println(task.getTaskid());
-        Task task = new Task();
+        Task task = Task.builder().build();
         task.setTaskid(5);
         task.setEndTime(new Date());
         task.setStatus("finished");

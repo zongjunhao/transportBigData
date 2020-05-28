@@ -32,7 +32,7 @@ public class TrackWayController {
             resultData.setData(trackWay);
             resultData.setResult(ResultCodeEnum.OK);
         } else {
-            resultData.setResult(ResultCodeEnum.DB_FIND_FAILURE);
+            resultData.setResult(ResultCodeEnum.SERVER_ERROR);
         }
         return resultData;
     }

@@ -28,11 +28,10 @@ public class CleanErraticData {
     public static void main(String[] args) {
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
-//        Dataset<Row> filledData = new CleanErraticData(spark).getFilledData();
-//        filledData.show();
-//        filledData.collect().forEach(x->System.out.println(x._1()+"--"+DateUtil.getDateFormat(x._2())+"--"+x._3()+"-"+x._4()));
-        JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedRdd = new CleanErraticData(spark).cleanErraticData();
-        cleanedRdd.collect();
+//        JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedRdd = new CleanErraticData(spark).cleanErraticData(null,null);
+//        cleanedRdd.collect();
+        JavaRDD<Tuple5<String, Long, String, String, String>> tuple5JavaRDD = new CleanErraticData(spark).cleanErraticDataAll(null, null);
+        tuple5JavaRDD.collect().forEach(System.out::println);
     }
 
     private SparkSession spark;
@@ -41,15 +40,32 @@ public class CleanErraticData {
         this.spark = spark;
     }
 
+    public JavaRDD<Tuple5<String, Long, String, String, String>> cleanErraticDataAll(Long startTime,Long endTime){
+        JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> groupedCleanedData = cleanErraticData(startTime, endTime);
+        JavaRDD<Tuple5<String, Long, String, String, String>> flatmapRdd = groupedCleanedData.flatMap(x -> x._2.stream().map(i -> new Tuple5<>(x._1, i._1(), i._2(), i._3(), i._4())).iterator());
+        return flatmapRdd;
+    }
+
     /**
      * 清除数据
      * 漂移数据和乒乓数据
-     * @return JavaPairRDD<userId, List<Tuple4<time, cellId, longitude, latitude>>>
+     * @return JavaPairRDD(userId, List(time, cellId, longitude, latitude))
      */
-    public JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanErraticData(){
+    public JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanErraticData(Long startTime,Long endTime){
         Init initData = new Init(spark);
         JavaRDD<Row> cleanedRdd = initData.init().toJavaRDD();
-        JavaPairRDD<String, Iterable<Tuple4<Long, String, String, String>>> userTimeRdd = cleanedRdd.mapToPair(row -> {
+        JavaPairRDD<String, Iterable<Tuple4<Long, String, String, String>>> userTimeRdd = cleanedRdd
+                .filter(x->{
+            if (startTime == null && endTime == null) {
+                return true;
+            } else if (startTime == null) {
+                return Long.parseLong(x.getString(0))<endTime;
+            } else if (endTime == null) {
+                return Long.parseLong(x.getString(0))>startTime;
+            } else {
+                return Long.parseLong(x.getString(0))>startTime && Long.parseLong(x.getString(0))<endTime;
+            }
+        }).mapToPair(row -> {
             //timestamp,imsi,lac_id,cell_id,longitude,latitude
             long time = Long.parseLong((String) row.get(0));
             String userId = row.getString(1);
@@ -137,17 +153,8 @@ public class CleanErraticData {
      * 填充数据
      * @return imsi,timestamp, cellId,  longitude, latitude
      */
-    public JavaRDD<Tuple5<String, Long,String, String, String>> getFilledRdd(){
-        //        Init initData = new Init(spark);
-//        JavaRDD<Row> cleanedRdd = initData.getCleanedData().toJavaRDD();
-//        JavaPairRDD<String, Iterable<Tuple3<Long, String, String>>> userTimeRdd = cleanedRdd.mapToPair(row -> {//timestamp,imsi,lac_id,cell_id
-//            long time = Long.parseLong((String) row.get(0));
-//            String userId = row.getString(1);
-//            String lacId = row.getString(2);
-//            String cellId = row.getString(3);
-//            return new Tuple2<>(userId, new Tuple3<>(time, lacId, cellId));
-//        }).groupByKey();
-        JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedDataRdd = cleanErraticData();
+    public JavaRDD<Tuple5<String, Long,String, String, String>> getFilledRdd(Long startTime1,Long endTime1){
+        JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedDataRdd = cleanErraticData(startTime1,endTime1);
         JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = cleanedDataRdd.map(row -> {
             String userId = row._1;
             List<Tuple4<Long, String, String, String>> trackList = row._2;
@@ -179,10 +186,10 @@ public class CleanErraticData {
      * @return 填充后的数据
      * Dataset<Row<imsi,timestamp, cellId,  longitude, latitude>>
      */
-    public Dataset<Row> getFilledData(){
-        JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = getFilledRdd();
+    public Dataset<Row> getFilledData(Long startTime,Long endTime){
+        JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = getFilledRdd(startTime,endTime);
         JavaRDD<Row> rowRdd = filledRdd.map(row -> RowFactory.create(row._1(), row._2(), row._3(), row._4(),row._5()));
-        ArrayList<StructField> fields = new ArrayList<>();
+//        ArrayList<StructField> fields = new ArrayList<>();
         StructField[] structFields = {
                 new StructField("imsi",DataTypes.StringType,true,Metadata.empty()),
                 new StructField("timestamp",DataTypes.LongType, true, Metadata.empty()),
@@ -191,18 +198,6 @@ public class CleanErraticData {
                 new StructField("latitude",DataTypes.StringType, true, Metadata.empty())
         };
         StructType schema = new StructType(structFields);
-//        StructField field = null;
-//        field = DataTypes.createStructField("imsi",DataTypes.StringType,true);
-//        fields.add(field);
-//        field = DataTypes.createStructField("timestamp",DataTypes.LongType,true);
-//        fields.add(field);
-//        field = DataTypes.createStructField("cell_id",DataTypes.StringType,true);
-//        fields.add(field);
-//        field = DataTypes.createStructField("longitude",DataTypes.StringType,true);
-//        fields.add(field);
-//        field = DataTypes.createStructField("latitude",DataTypes.StringType,true);
-//        fields.add(field);
-//        StructType schema = DataTypes.createStructType(fields);
         return spark.createDataFrame(rowRdd, schema);
     }
 

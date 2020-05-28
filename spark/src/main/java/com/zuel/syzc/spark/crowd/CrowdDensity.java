@@ -1,5 +1,6 @@
 package com.zuel.syzc.spark.crowd;
 
+import com.zuel.syzc.spark.init.CleanErraticData;
 import com.zuel.syzc.spark.init.Init;
 import com.zuel.syzc.spark.kit.GetCells;
 import com.zuel.syzc.spark.entity.BaseStationPoint;
@@ -16,6 +17,8 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.util.LongAccumulator;
 import scala.Tuple2;
+import scala.Tuple4;
+import scala.Tuple5;
 
 import java.util.*;
 
@@ -33,8 +36,10 @@ public class CrowdDensity {
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         // 调用算法,计算在某个原型区域内的流入流出人数
-        String crowdFlow = new CrowdDensity(spark).crowdInflowAndOutflow("2018-10-02-09", "2018-10-03-12", 123.4159698, 41.80778122, 1000.0);
+        String crowdFlow = new CrowdDensity(spark)
+                .crowdInflowAndOutflow(DateUtil.getDayHour("2018-10-02-09"), DateUtil.getDayHour("2018-10-03-12"), 123.4159698, 41.80778122, 1000.0);
         System.out.println(crowdFlow);
+        System.out.println(DateUtil.getDayHour("2018-10-02-09")+"  "+DateUtil.getDayHour("2018-10-03-12"));
         // 计算在某个指定多边形区域内的流入流出人数
 //        List<BaseStationPoint> points = new ArrayList<>();
 //        points.add(new BaseStationPoint(0, 0));
@@ -54,7 +59,7 @@ public class CrowdDensity {
      * @param points 自定义多边形的顶点
      * @return 输入人口数和输出人口数
      */
-    public String crowdInflowAndOutflow(String startTime,String endTime,List<BaseStationPoint> points) {
+    public String crowdInflowAndOutflow(Long startTime,Long endTime,List<BaseStationPoint> points) {
         getCells = new GetCells(spark);
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
@@ -73,7 +78,7 @@ public class CrowdDensity {
      * @param radius 中心点半径
      * @return 输入人口量和输出人口量
      */
-    public String crowdInflowAndOutflow(String startTime,String endTime,double longitude, double latitude, double radius) {
+    public String crowdInflowAndOutflow(Long startTime,Long endTime,double longitude, double latitude, double radius) {
         getCells = new GetCells(spark);
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
@@ -90,28 +95,24 @@ public class CrowdDensity {
      * @param cellListRdd 已经标记好的cellList
      * @return inflow&outFlow
      */
-    private String calculateInflowAndOutFlow(String startTime,String endTime,JavaPairRDD<String, Integer> cellListRdd){
+    private String calculateInflowAndOutFlow(Long startTime,Long endTime,JavaPairRDD<String, Integer> cellListRdd){
         // spark core上下文对象
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
-        // 获取清洗后的数据集
-        Dataset<Row> cleanedData = new Init(spark).getCleanedData();
+        // 获取清洗后的数据集 JavaPairRDD(userId, time, cellId, longitude, latitude)
+        JavaRDD<Tuple5<String, Long, String, String, String>> cleanedRdd = new CleanErraticData(spark).cleanErraticDataAll(startTime, endTime);
         // 将DataSet转化为Rdd
-        JavaRDD<Row> cleanedJavaRdd = cleanedData.javaRDD();
         // 使用filter算子筛选出在指定时间内所有人活动的数据
-        JavaRDD<Row> filteredRdd = cleanedJavaRdd.filter(row -> {
-            long time = Long.parseLong((String) row.get(0));
-            if ((DateUtil.getDayHour(startTime)<time)&&(time<DateUtil.getDayHour(endTime))){
-                return true;
-            } else {
-                return false;
-            }
-        });
+//        JavaRDD<Row> filteredRdd = cleanedRdd.filter(row -> {
+//            long time = Long.parseLong((String) row.get(0));
+//            if ((DateUtil.getDayHour(startTime)<time)&&(time<DateUtil.getDayHour(endTime))){
+//                return true;
+//            } else {
+//                return false;
+//            }
+//        });
         // 使用mapToPair算子将row数据转化为tuple格式（cellId,(userId,time))
-        JavaPairRDD<String, Tuple2<String, Long>> mapedRdd = filteredRdd.mapToPair(row -> {
-            long time = Long.parseLong((String) row.get(0));
-            String userId = (String) row.get(1);
-            String cellId = (String) row.get(3);
-            return new Tuple2<>(cellId, new Tuple2<>(userId, time));
+        JavaPairRDD<String, Tuple2<String, Long>> mapedRdd = cleanedRdd.mapToPair(row -> {
+            return new Tuple2<>(row._3(), new Tuple2<>(row._1(), row._2()));
         });
         // 将过滤后用户数据和基站数据根据key(cellId)合并,返回的是(value1,value2)
         JavaPairRDD<String, Tuple2<Tuple2<String, Long>, Integer>> joinedRdd = mapedRdd.join(cellListRdd);
@@ -155,6 +156,7 @@ public class CrowdDensity {
         list.add(row);
         JavaRDD<Row> parallelize = sc.parallelize(list);
         Dataset<Row> dataFrame = spark.createDataFrame(parallelize, schema);
+        System.out.println(inflow.value()+"-----------------"+outflow.value());
         dataFrame.write().format("jdbc").mode(SaveMode.Overwrite)
                 .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
                 .option("dbtable", "area_inout_flow")

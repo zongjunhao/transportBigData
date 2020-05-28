@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface CrowdDensityService {
     // 计算历史模型
-    public void computeHistoryModel();
+    public int computeHistoryModel(Long startTime,Long endTime);
 
     // 获取人群分布情况
     public List<CellCrowd> getCrowdCount(Long startTime, Long endTime);

@@ -54,10 +54,11 @@ public class UnusualCrowdDensity {
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         UnusualCrowdDensity unusualCrowdDensity = new UnusualCrowdDensity(spark);
-        JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = new CleanErraticData(spark).getFilledRdd();
+        unusualCrowdDensity.computeHistoryPeople(null,null);
+
 //        unusualCrowdDensity.computeHistoryPeople(spark,DateUtil.getTimestamp("2018-10-01 00:00:00.000"),DateUtil.getTimestamp("2018-10-03 23:00:00.000"),filledRdd);
-        JavaRDD<Row> rowJavaRDD = unusualCrowdDensity.judgeAbnormalCell(DateUtil.getTimestamp("2018-10-03 23:00:00.000"), filledRdd);
-        rowJavaRDD.collect().forEach(System.out::println);
+//        JavaRDD<Row> rowJavaRDD = unusualCrowdDensity.judgeAbnormalCell(DateUtil.getTimestamp("2018-10-03 23:00:00.000"),null);
+//        rowJavaRDD.collect().forEach(System.out::println);
 //        unusualCrowdDensity.computeT(spark,DateUtil.getTimestamp("2018-10-03 20:00:00.000"));
     }
 
@@ -67,9 +68,10 @@ public class UnusualCrowdDensity {
      * 计算cell内历史人数
      * @param startDay 起始日期
      * @param endDay 结束日期
-     * @param filledRdd (userId,timestamp, cellId,  longitude, latitude)
+     * filledRdd  (userId,timestamp, cellId,  longitude, latitude)
      */
-    public void computeHistoryPeople(long startDay,long endDay,JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd){
+    public void computeHistoryPeople(Long startDay,Long endDay){
+        JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = new CleanErraticData(spark).getFilledRdd(startDay,endDay);
         /**
          * 输入 filledRdd (userId,timestamp, cellId,  longitude, latitude)
          * 1. filter 筛选出指定时间内的数据
@@ -78,7 +80,7 @@ public class UnusualCrowdDensity {
          * 4. reduceByKey 相同key的value值相加，每天每个小时每个cell内的人数
          * 输出 ((某天，某时间段，某小时，某用户),小区内人数)
          */
-        JavaPairRDD<Tuple4<String, String, Long, String>, Integer> groupRdd = filledRdd.filter(x -> x._2() >= startDay && x._2() < endDay)
+        JavaPairRDD<Tuple4<String, String, Long, String>, Integer> groupRdd = filledRdd
                 .groupBy(x -> new Tuple5<>(DateUtil.getDay(x._2()), ComputeKey.computeKey(x._2()), DateUtil.setUniqueData(x._2()), x._3(), x._1()))
                 .mapToPair(x -> new Tuple2<>(new Tuple4<>(x._1._1(), x._1._2(), x._1._3(), x._1._4()), 1))
                 .reduceByKey(Integer::sum);
@@ -95,7 +97,15 @@ public class UnusualCrowdDensity {
         // 将数据转化成DataFrame，存储在mysql中
         Dataset<Row> cellCountDf = spark.createDataFrame(cellGroupRow, schema);
         //存储计算的cell平均人数
-        cellCountDf.write().format("jdbc").mode(SaveMode.Overwrite)
+        SaveMode saveMode;
+        // 如果没有起始时间说明是计算所有的，把所有数据覆盖
+        // 如果有起始时间说明是指定时间计算，将新计算的数据添加进去
+        if (startDay != null) {
+            saveMode = SaveMode.Append;
+        } else {
+            saveMode = SaveMode.Overwrite;
+        }
+        cellCountDf.write().format("jdbc").mode(saveMode)
                 .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
                 .option("dbtable", "cell_count")
                 .option("batchsize",10000)
@@ -164,7 +174,11 @@ public class UnusualCrowdDensity {
         return thresholdRdd;
     }
 
-    public JavaRDD<Row> judgeAbnormalCell(long startDay,JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd){
+    public JavaRDD<Row> judgeAbnormalCell(Long startDay,Long endTimestamp){
+        if (endTimestamp == null) {
+            endTimestamp = startDay + 60 * 60 * 1000;
+        }
+        JavaRDD<Tuple5<String, Long,String, String, String>> filledRdd = new CleanErraticData(spark).getFilledRdd(startDay,endTimestamp);
 //        long startDay = DateUtil.getTimestamp("2018-10-03 23:00:00.000");
         String dayTime = ComputeKey.computeKey(startDay);
         String day = DateUtil.getDay(startDay);
