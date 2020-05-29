@@ -20,7 +20,7 @@ public class TrackWayController {
     @RequestMapping("/getTrackWay")
     public ResultData getTrackWay(String userId,Long startTime,Long endTime) {
         ResultData<List<UserTrack>> resultData = new ResultData();
-        if (userId ==null || startTime == null) {
+        if ( startTime == null) {
             resultData.setResult(ResultCodeEnum.PARA_WORNING_NULL);
             return resultData;
         }
@@ -55,5 +55,19 @@ public class TrackWayController {
             resultData.setResult(ResultCodeEnum.SERVER_ERROR);
         }
         return resultData;
+    }
+
+    @RequestMapping("/getAllUser")
+    public ResultData getAllUser(){
+        ResultData<List<String>> resultData = new ResultData();
+        List<String> allUser = trackWayService.getAllUser();
+        if(allUser!=null) {
+            resultData.setData(allUser);
+            resultData.setResult(ResultCodeEnum.OK);
+        } else {
+            resultData.setResult(ResultCodeEnum.DB_FIND_FAILURE);
+        }
+        return resultData;
+
     }
 }

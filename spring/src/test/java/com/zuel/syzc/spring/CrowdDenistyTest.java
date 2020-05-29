@@ -60,7 +60,7 @@ public class CrowdDenistyTest {
     @Test
     void getTrackWay(){
         System.out.println(DateUtil.getDayHour("2018-10-03-00")+"---"+DateUtil.getDayHour("2018-10-04-00"));
-        List<UserTrack> trackWay = trackWayService.getTrackWay("460020095098364762", DateUtil.getDayHour("2018-10-03-00"), DateUtil.getDayHour("2018-10-04-00"));
+        List<UserTrack> trackWay = trackWayService.getTrackWay(null, DateUtil.getDayHour("2018-10-03-00"), DateUtil.getDayHour("2018-10-04-00"));
         trackWay.forEach(System.out::println);
     }
 

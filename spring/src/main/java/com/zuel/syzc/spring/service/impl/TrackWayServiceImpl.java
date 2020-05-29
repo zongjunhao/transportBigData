@@ -3,6 +3,7 @@ package com.zuel.syzc.spring.service.impl;
 import com.zuel.syzc.spark.SparkEntry;
 import com.zuel.syzc.spring.dao.TaskDao;
 import com.zuel.syzc.spring.dao.TrackWayDao;
+import com.zuel.syzc.spring.dao.UserTrackDetailDao;
 import com.zuel.syzc.spring.model.dto.UserTrack;
 import com.zuel.syzc.spring.model.entity.Task;
 import com.zuel.syzc.spring.model.entity.TrackWay;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -20,6 +22,8 @@ public class TrackWayServiceImpl implements TrackWayService {
     @Autowired
     private TaskDao taskDao;
     private SparkEntry sparkEntry = new SparkEntry();
+    @Autowired
+    private UserTrackDetailDao userTrackDetailDao;
 
     @Override
     public List<UserTrack> getTrackWay(String userId, Long startTime, Long endTime) {
@@ -63,5 +67,13 @@ public class TrackWayServiceImpl implements TrackWayService {
         } else {
             return null;
         }
+    }
+
+    public List<String> getAllUser(){
+        List<String> allUser = userTrackDetailDao.getAllUser();
+        if (allUser.size()>0){
+            return allUser;
+        }
+        return null;
     }
 }

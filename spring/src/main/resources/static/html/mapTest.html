@@ -1,28 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Transport</title>
-    <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
-    <link rel="stylesheet" href="/css/animate.css" type="text/css" />
-    <link rel="stylesheet" href="/css/font-awesome.min.css" type="text/css" />
-    <link rel="stylesheet" href="/css/simple-line-icons.css" type="text/css" />
-    <link rel="stylesheet" href="/css/font.css" type="text/css" />
-    <!--    <link rel="stylesheet" href="/css/app.css" type="text/css" />-->
-    <!-- 引用vue -->
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="/vendor/jquery/jquery.min.js"></script>
-    <script src="/vendor/jquery/bootstrap.js"></script>
-    <script src="/js/echarts/echarts.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
     <style>
         html,
         body{
             width: 100%;
             height: 100%;
         }
-        #container,#mainPage {
+        #container {
             width: 100%;
             height: 100%;
         }
@@ -33,15 +21,17 @@
     <script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
 </head>
 <body>
-<div id="mainPage" class="row">
-    <div class="panel panel-default panel-body" id="container"></div>
+<!--<div >-->
+<!--    <div class="panel-body">-->
+<!--        -->
+<!--    </div>-->
+<!--</div>-->
+<div class="panel panel-default panel-body" id="container"></div>
 
-    <div class="input-card" style="width: 120px">
-        <button class="btn" onclick="circleEditor.open()" style="margin-bottom: 5px">选定区域</button>
-        <button class="btn" onclick="circleEditor.close()">结束选定</button>
-    </div>
+<div class="input-card" style="width: 120px">
+    <button class="btn" onclick="circleEditor.open()" style="margin-bottom: 5px">选定区域</button>
+    <button class="btn" onclick="circleEditor.close()">结束选定</button>
 </div>
-
 <script type="text/javascript">
     var map = new AMap.Map("container", {
         center: [123.4344177, 41.81195831],
@@ -85,20 +75,14 @@
         console.log(circle.getCenter().lng)
         console.log(circle.getCenter().lat)
         console.log(circle.getRadius())
-        let longitude = circle.getCenter().lng;
-        let latitude = circle.getCenter().lat;
-        let radius = circle.getRadius();
         $.ajax({
             type:"GET",
-            url:"/stay/getInOutFlow",
+            url:"/stay/getOd",
             data:{
-                longitude:longitude,
-                latitude:latitude,
-                radius : radius,
-                startTime:1538442000000,
-                endTime:1538539200000
+                startTime : "9:00",
+                endTime : "10:00"
             },
-            // dataType:"json",
+            dataType:"json",
             success:function(res){
                 console.log(res);
                 if(res.resultCode=="200"){
@@ -108,7 +92,7 @@
                     //查找失败，没有该条记录
                     // alert("查找失败")
                 }
-                // console.log("加载了echarts")
+                console.log("加载了echarts")
 // 				$("#dataTables-example").dataTable();
             },
             error:function(res){
@@ -117,28 +101,6 @@
         });
         // event.target 即为编辑后的圆形对象
     })
-    // var app = new Vue({
-    //     el: '#mainPage',
-    //     data() {
-    //         return{
-    //
-    //         }
-    //     },
-    //     methods:{
-    //         request(){
-    //             console.log(666)
-    //         }
-    //     },
-    //     created(){
-    //
-    //     },
-    //     mounted(){
-    //     },
-    //     watch: {
-    //
-    //     }
-    // });
 </script>
 </body>
-
 </html>

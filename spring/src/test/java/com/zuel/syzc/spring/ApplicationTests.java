@@ -2,6 +2,7 @@ package com.zuel.syzc.spring;
 
 import com.zuel.syzc.spark.SparkEntry;
 import com.zuel.syzc.spring.dao.TaskDao;
+import com.zuel.syzc.spring.dao.UserTrackDetailDao;
 import com.zuel.syzc.spring.model.entity.Task;
 import com.zuel.syzc.spring.service.CrowdDensityService;
 import com.zuel.syzc.spring.service.impl.CrowdDensityServiceImpl;
@@ -11,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @SpringBootTest
 class ApplicationTests {
@@ -22,6 +26,13 @@ class ApplicationTests {
     TaskDao taskDao;
     @Autowired
     private CrowdDensityService crowdDensityService;
+    @Autowired
+    UserTrackDetailDao userTrackDetailDao;
+    @Test
+    void user(){
+        List<String> allUser = userTrackDetailDao.getAllUser();
+        System.out.println(allUser);
+    }
 
     @Test
     void moduleTest(){
