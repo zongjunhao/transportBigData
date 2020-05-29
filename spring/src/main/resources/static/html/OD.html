@@ -8,6 +8,7 @@
     <script src="/vendor/jquery/jquery.min.js"></script>
 </head>
 <body>
+<h1>小区数据分析</h1>
 <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
 <div id="main" style="width: 600px;height:400px;"></div>
 <script type="text/javascript">
@@ -52,13 +53,13 @@
                 console()
             } else {
                 //查找失败，没有该条记录
-                alert("查找失败")
+                // alert("查找失败")
             }
             console.log("加载了echarts")
 // 				$("#dataTables-example").dataTable();
         },
         error:function(res){
-            alert("请求的页面有错误");
+            // alert("请求的页面有错误");
         }
     });
 </script>

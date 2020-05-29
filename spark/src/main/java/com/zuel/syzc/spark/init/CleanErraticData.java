@@ -30,8 +30,8 @@ public class CleanErraticData {
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
 //        JavaPairRDD<String, List<Tuple4<Long, String, String, String>>> cleanedRdd = new CleanErraticData(spark).cleanErraticData(null,null);
 //        cleanedRdd.collect();
-        JavaRDD<Tuple5<String, Long, String, String, String>> tuple5JavaRDD = new CleanErraticData(spark).cleanErraticDataAll(null, null);
-        tuple5JavaRDD.collect().forEach(System.out::println);
+        JavaRDD<Tuple5<String, Long, String, String, String>> tuple5JavaRDD = new CleanErraticData(spark).getFilledRdd(null, null);
+        tuple5JavaRDD.collect().forEach(x->System.out.println(x._1()+"--"+DateUtil.getDateFormat(x._2())+"---"+x._3()));
     }
 
     private SparkSession spark;
