@@ -3,9 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style>
+        html,
+        body,
+        #container {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
 <h1>人群密度展示</h1>
+<div id="container" class="container">
+</div>
+<script src="//a.amap.com/Loca/static/dist/jquery.min.js"></script>
+<script src="https://webapi.amap.com/maps?v=1.4.15&key=572552fe424d121536dd050c1adff15d"></script>
+<script src="//webapi.amap.com/loca?v=1.3.2&key=572552fe424d121536dd050c1adff15d"></script>
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script>
+    $.ajax({
+        type:
+    })
+    $.get('user/460000095005571676.csv', function (data) {
+        var map = new AMap.Map('container', {
+            mapStyle: 'amap://styles/1de318cbb8d12c02303a22c550b9ccc9',
+            zoom: 10,
+            center: [123.2531, 41.8011],
+            features: ['bg', 'road'],
+            // Loca 自 1.2.0 起 viewMode 模式默认为 3D，如需 2D 模式，请显示配置。
+            // viewMode: '3D'
+        });
 
+        // var geocoder = new AMap.Geocoder({
+        //     city: "shenyang", //城市设为北京，默认：“全国”
+        // });
+
+        // 点图
+        // var layer = new Loca.PointLayer({
+        //     map: map
+        // });
+
+        // 热力图
+        const layer = new Loca.HeatmapLayer({
+            map: map
+        });
+
+        layer.setData(data, {
+            // lnglat: '经纬度',
+            // 或者使用回调函数构造经纬度坐标
+
+            lnglat: function (obj) {
+                var value = obj.value;
+                var lnglat = [value['longitude'], value['latitude']];
+                return lnglat;
+            },
+
+            // 指定数据类型
+            type: 'csv'
+        });
+
+        // 点图
+        // layer.setOptions({
+        //     style: {
+        //         // 圆形半径，单位像素
+        //         radius: 3,
+        //         // 填充颜色
+        //         color: '#5DFBF9',
+        //         // 描边颜色
+        //         borderColor: '#5DFBF9',
+        //         // 描边宽度，单位像素
+        //         borderWidth: 1,
+        //         // 透明度 [0-1]
+        //         opacity: 1,
+        //     }
+        // });
+
+        // 热力图
+        layer.setOptions({
+            style: {
+                // 热力半径，单位：像素
+                radius: 30,
+                opacity: [0.1, 0.8],
+                // 颜色范围
+                color: {
+                    // 1: '#f0f9e8',
+                    // 0.8: '#bae4bc',
+                    // 0.6: '#7bccc4',
+                    // 0.4: '#43a2ca',
+                    // 0.2: '#0868ac',
+
+                    0.5: 'blue',
+                    0.65: 'rgb(117,211,248)',
+                    0.7: 'rgb(0, 255, 0)',
+                    0.9: '#ffea00',
+                    1.0: 'red'
+                }
+            }
+        });
+
+        layer.render();
+    });
+
+    var map = new AMap.Map('container', {
+        zoom: 9,
+        showLabel: false,
+        expandZoomRange: true,
+        center: [116.12, 40.11],
+        viewMode: '3D',
+        pitch: 60,
+        mapStyle: 'amap://styles/whitesmoke',
+    });
+
+    map.on('complete', function () {
+        var viewData = { '2D': 3E3, '3D': 3E4 };
+        var curViewMode = map.getViewMode_();
+
+        // 创建 AMap.LabelsLayer 图层
+        var layer = new AMap.LabelsLayer({
+            zooms: [3, 20],
+            zIndex: 1000,
+            // 关闭标注避让，默认为开启，v1.4.15 新增属性
+            animation: false,
+            // 关闭标注淡入动画，默认为开启，v1.4.15 新增属性
+            collision: false
+        });
+
+        // 将图层添加到地图
+        map.add(layer);
+
+        var markers = [];
+        var positions = Positions.slice(0, viewData[curViewMode]);
+
+        var icon = {
+            type: 'image',
+            image: 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png',
+            size: [6, 9],
+            anchor: 'bottom-center',
+            angel: 0,
+            retina: true
+        };
+
+        for (var i = 0; i < positions.length; i++) {
+            var curPosition = positions[i];
+            var curData = {
+                position: curPosition,
+                icon
+            };
+
+            var labelMarker = new AMap.LabelMarker(curData);
+
+            markers.push(labelMarker);
+        }
+
+        // 一次性将海量点添加到图层
+        layer.add(markers);
+
+        // 普通点
+        var normalMarker = new AMap.Marker({
+            offset: new AMap.Pixel(-75, -40),
+        });
+        // 事件
+        layer.on('mouseover', function (e) {
+            var position = e.data.data && e.data.data.position;
+
+            if (position) {
+                normalMarker.setContent(
+                    '<div class="amap-info-window">'
+                    + position +
+                    '<div class="amap-info-sharp"></div>' +
+                    '</div>');
+                normalMarker.setPosition(position);
+                map.add(normalMarker);
+            }
+        });
+
+        layer.on('mouseout', function () {
+            map.remove(normalMarker);
+        });
+
+        var mapViewElement = document.getElementById('mapView');
+        var massNumberElement = document.getElementById('massNumber');
+        mapViewElement.innerHTML = curViewMode;
+        massNumberElement.innerHTML = viewData[curViewMode];
+    });
+
+    var map = new AMap.Map('container', {
+        zoom: 9,
+        showLabel: false,
+        expandZoomRange: true,
+        center: [116.12, 39.11],
+        viewMode: '3D',
+        pitch: 60,
+        mapStyle: 'amap://styles/whitesmoke'
+    });
+
+    var layer = new AMap.LabelsLayer({
+        zooms: [3, 20],
+        zIndex: 1000,
+        // 开启标注避让，默认为开启，v1.4.15 新增属性
+        collision: true,
+        // 开启标注淡入动画，默认为开启，v1.4.15 新增属性
+        animation: true,
+    });
+
+    map.add(layer);
+
+    var markers = [];
+
+    for (var i = 0; i < LabelsData.length; i++) {
+        var curData = LabelsData[i];
+        curData.extData = {
+            index: i
+        };
+
+        var labelMarker = new AMap.LabelMarker(curData);
+
+        markers.push(labelMarker);
+
+        layer.add(labelMarker);
+    }
+
+    map.setFitView();
+</script>
 </body>
 </html>
