@@ -15,35 +15,43 @@
     </style>
 </head>
 <body>
-<h1>人群密度展示</h1>
+<!--<h1>人群密度展示</h1>-->
 <div id="container" class="container">
 </div>
-<script src="//a.amap.com/Loca/static/dist/jquery.min.js"></script>
-<script src="https://webapi.amap.com/maps?v=1.4.15&key=572552fe424d121536dd050c1adff15d"></script>
+<script src="//webapi.amap.com/maps?v=1.4.15&key=572552fe424d121536dd050c1adff15d"></script>
 <script src="//webapi.amap.com/loca?v=1.3.2&key=572552fe424d121536dd050c1adff15d"></script>
-<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="//a.amap.com/Loca/static/dist/jquery.min.js"></script>
+<!--<script src="/vendor/jquery/jquery.min.js"></script>-->
 <script>
-    $.ajax({
-        type:
-    })
-    $.get('user/460000095005571676.csv', function (data) {
+    let result_data
+    // $.ajax({
+    //     type: 'get',
+    //     url: '/crowd/getCrowdCount1',
+    //     data: {
+    //         startTime: "1538457896159"
+    //     },
+    //     dataType: "json",
+    //     success: function (res) {
+    //         if (res.code === "200") {
+    //             console.log("res.data", res.data)
+    //             draw_map(res.data)
+    //         } else {
+    //             console.log(res.msg)
+    //         }
+    //     }
+    // })
+    draw_map("")
+    function draw_map(data) {
+        data = [{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79013824,"count":1.0,"cellId":"67446797","longitude":123.3956909},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.42948151,"count":1.0,"cellId":"11884686","longitude":123.3410721},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.82408905,"count":1.0,"cellId":"61409155","longitude":124.0002823},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.78144836,"count":1.0,"cellId":"67455283","longitude":123.4209595},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.81045914,"count":1.0,"cellId":"2614540","longitude":123.411911},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79272079,"count":1.0,"cellId":"67444532","longitude":123.4003677},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.93780136,"count":1.0,"cellId":"68133408","longitude":123.3345413},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80072021,"count":1.0,"cellId":"68078869","longitude":123.4279633},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79399109,"count":1.0,"cellId":"61396356","longitude":123.4078903},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80054855,"count":1.0,"cellId":"67577867","longitude":123.4267578},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.58811188,"count":1.0,"cellId":"67737653","longitude":123.560173},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80329132,"count":1.0,"cellId":"235008533","longitude":123.4697189},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.65663147,"count":1.0,"cellId":"67927613","longitude":123.3987732},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.52082062,"count":1.0,"cellId":"67924511","longitude":122.6752625},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.76622009,"count":1.0,"cellId":"12586371","longitude":123.1857224},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.82310104,"count":1.0,"cellId":"67229247","longitude":123.517189},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.77341843,"count":1.0,"cellId":"67428661","longitude":123.4338303},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.78939819,"count":1.0,"cellId":"67447564","longitude":123.3982468},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80054855,"count":1.0,"cellId":"67577917","longitude":123.4267578},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79851151,"count":1.0,"cellId":"67440397","longitude":123.4061203},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.8078804,"count":1.0,"cellId":"67569931","longitude":123.4119873},{"dayHour":1538457896159,"isAbnormal":0,"latitude":42.1137619,"count":1.0,"cellId":"67938572","longitude":122.65802},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.81689835,"count":1.0,"cellId":"249675788","longitude":123.4136581},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.85372162,"count":1.0,"cellId":"67669260","longitude":123.4176178},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.8102417,"count":1.0,"cellId":"67291403","longitude":123.4166718},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.69551086,"count":1.0,"cellId":"234912524","longitude":123.1545181},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.83444977,"count":1.0,"cellId":"60010381","longitude":123.4266891}]
+        console.log("result_data", data)
         var map = new AMap.Map('container', {
             mapStyle: 'amap://styles/1de318cbb8d12c02303a22c550b9ccc9',
-            zoom: 10,
-            center: [123.2531, 41.8011],
+            zoom: 13,
+            center: [123.4231, 41.8011],
             features: ['bg', 'road'],
             // Loca 自 1.2.0 起 viewMode 模式默认为 3D，如需 2D 模式，请显示配置。
             // viewMode: '3D'
         });
-
-        // var geocoder = new AMap.Geocoder({
-        //     city: "shenyang", //城市设为北京，默认：“全国”
-        // });
-
-        // 点图
-        // var layer = new Loca.PointLayer({
-        //     map: map
-        // });
 
         // 热力图
         const layer = new Loca.HeatmapLayer({
@@ -53,38 +61,17 @@
         layer.setData(data, {
             // lnglat: '经纬度',
             // 或者使用回调函数构造经纬度坐标
-
             lnglat: function (obj) {
                 var value = obj.value;
-                var lnglat = [value['longitude'], value['latitude']];
-                return lnglat;
+                return [value['longitude'], value['latitude']];
             },
-
-            // 指定数据类型
-            type: 'csv'
         });
-
-        // 点图
-        // layer.setOptions({
-        //     style: {
-        //         // 圆形半径，单位像素
-        //         radius: 3,
-        //         // 填充颜色
-        //         color: '#5DFBF9',
-        //         // 描边颜色
-        //         borderColor: '#5DFBF9',
-        //         // 描边宽度，单位像素
-        //         borderWidth: 1,
-        //         // 透明度 [0-1]
-        //         opacity: 1,
-        //     }
-        // });
 
         // 热力图
         layer.setOptions({
             style: {
                 // 热力半径，单位：像素
-                radius: 30,
+                radius: 50,
                 opacity: [0.1, 0.8],
                 // 颜色范围
                 color: {
@@ -104,128 +91,7 @@
         });
 
         layer.render();
-    });
-
-    var map = new AMap.Map('container', {
-        zoom: 9,
-        showLabel: false,
-        expandZoomRange: true,
-        center: [116.12, 40.11],
-        viewMode: '3D',
-        pitch: 60,
-        mapStyle: 'amap://styles/whitesmoke',
-    });
-
-    map.on('complete', function () {
-        var viewData = { '2D': 3E3, '3D': 3E4 };
-        var curViewMode = map.getViewMode_();
-
-        // 创建 AMap.LabelsLayer 图层
-        var layer = new AMap.LabelsLayer({
-            zooms: [3, 20],
-            zIndex: 1000,
-            // 关闭标注避让，默认为开启，v1.4.15 新增属性
-            animation: false,
-            // 关闭标注淡入动画，默认为开启，v1.4.15 新增属性
-            collision: false
-        });
-
-        // 将图层添加到地图
-        map.add(layer);
-
-        var markers = [];
-        var positions = Positions.slice(0, viewData[curViewMode]);
-
-        var icon = {
-            type: 'image',
-            image: 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png',
-            size: [6, 9],
-            anchor: 'bottom-center',
-            angel: 0,
-            retina: true
-        };
-
-        for (var i = 0; i < positions.length; i++) {
-            var curPosition = positions[i];
-            var curData = {
-                position: curPosition,
-                icon
-            };
-
-            var labelMarker = new AMap.LabelMarker(curData);
-
-            markers.push(labelMarker);
-        }
-
-        // 一次性将海量点添加到图层
-        layer.add(markers);
-
-        // 普通点
-        var normalMarker = new AMap.Marker({
-            offset: new AMap.Pixel(-75, -40),
-        });
-        // 事件
-        layer.on('mouseover', function (e) {
-            var position = e.data.data && e.data.data.position;
-
-            if (position) {
-                normalMarker.setContent(
-                    '<div class="amap-info-window">'
-                    + position +
-                    '<div class="amap-info-sharp"></div>' +
-                    '</div>');
-                normalMarker.setPosition(position);
-                map.add(normalMarker);
-            }
-        });
-
-        layer.on('mouseout', function () {
-            map.remove(normalMarker);
-        });
-
-        var mapViewElement = document.getElementById('mapView');
-        var massNumberElement = document.getElementById('massNumber');
-        mapViewElement.innerHTML = curViewMode;
-        massNumberElement.innerHTML = viewData[curViewMode];
-    });
-
-    var map = new AMap.Map('container', {
-        zoom: 9,
-        showLabel: false,
-        expandZoomRange: true,
-        center: [116.12, 39.11],
-        viewMode: '3D',
-        pitch: 60,
-        mapStyle: 'amap://styles/whitesmoke'
-    });
-
-    var layer = new AMap.LabelsLayer({
-        zooms: [3, 20],
-        zIndex: 1000,
-        // 开启标注避让，默认为开启，v1.4.15 新增属性
-        collision: true,
-        // 开启标注淡入动画，默认为开启，v1.4.15 新增属性
-        animation: true,
-    });
-
-    map.add(layer);
-
-    var markers = [];
-
-    for (var i = 0; i < LabelsData.length; i++) {
-        var curData = LabelsData[i];
-        curData.extData = {
-            index: i
-        };
-
-        var labelMarker = new AMap.LabelMarker(curData);
-
-        markers.push(labelMarker);
-
-        layer.add(labelMarker);
     }
-
-    map.setFitView();
 </script>
 </body>
 </html>
