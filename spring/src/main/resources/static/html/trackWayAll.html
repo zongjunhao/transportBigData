@@ -5,15 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>Transport</title>
-    <!-- Google Font: Source Sans Pro -->
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
-    <!-- 引用阿里的字体图标库 -->
-    <link rel="stylesheet" type="text/css" href="http://at.alicdn.com/t/font_1546252_v6mv4erx9zg.css">
+    <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
     <!-- 引用vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/jquery/bootstrap.js"></script>
 </head>
 <body>
-<h1>出行方式整体概览</h1>
+<div id="mainpage">
+    <h1>出行方式整体概览</h1>
+
+</div>
+
 
 </body>
+<script>
+    var app = new Vue({
+        el: '#mainpage',
+        data() {
+            return{
+
+            }
+        },
+        methods:{
+            request(){
+                console.log(666)
+            }
+        },
+        created(){
+            console.log(777)
+            this.request();
+        },
+        mounted(){
+
+        },
+        watch: {
+
+        }
+    });
+</script>
 </html>

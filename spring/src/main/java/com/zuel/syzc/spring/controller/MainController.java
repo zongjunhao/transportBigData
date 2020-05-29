@@ -14,4 +14,9 @@ public class MainController {
         String index = "11/index";
         return index;
     }
+
+    @RequestMapping(value = "/trackWayAll", method = RequestMethod.GET)
+    public String trackWayAll() {
+        return "trackWayAll";
+    }
 }
