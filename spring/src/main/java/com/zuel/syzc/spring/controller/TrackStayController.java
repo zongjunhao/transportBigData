@@ -66,4 +66,51 @@ public class TrackStayController {
         return resultData;
     }
 
+    @RequestMapping("/areaDivision1")
+    public ResultData areaDivision1(){
+        ResultData<List<ZoneDivision>> resultData = new ResultData();
+        List<ZoneDivision> zoneDivisions = trackStayService.getAreaDivision();
+        if (zoneDivisions.size()>0) {
+            resultData.setData(zoneDivisions);
+            resultData.setResult(ResultCodeEnum.OK);
+        } else {
+            resultData.setResult(ResultCodeEnum.SERVER_ERROR);
+        }
+        return resultData;
+    }
+
+    @RequestMapping("/getOd1")
+    public  ResultData getOd1(Long startTime,Long endTime){
+        ResultData<List<OdMatrix>> resultData = new ResultData();
+        if (startTime == null) {
+            resultData.setResult(ResultCodeEnum.PARA_WORNING_NULL);
+            return resultData;
+        }
+        List<OdMatrix> od = trackStayService.getOd1(startTime, endTime);
+        if (od!=null){
+            resultData.setData(od);
+            resultData.setResult(ResultCodeEnum.OK);
+        } else {
+            resultData.setResult(ResultCodeEnum.SERVER_ERROR);
+        }
+        return resultData;
+
+    }
+    @RequestMapping("/getInOutFlow1")
+    public ResultData getInOutFlow1(Double longitude,Double latitude,Double radius, Long startTime,Long endTime){
+        ResultData<AreaInOutFlow> resultData = new ResultData<>();
+        if (longitude == null || latitude == null || radius == null ||startTime == null) {
+            resultData.setResult(ResultCodeEnum.PARA_WORNING_NULL);
+            return resultData;
+        }
+        AreaInOutFlow inOutFlow = trackStayService.getInOutFlow1(startTime,endTime,longitude,latitude,radius);
+        if (inOutFlow != null ) {
+            resultData.setData(inOutFlow);
+            resultData.setResult(ResultCodeEnum.OK);
+        } else {
+            resultData.setResult(ResultCodeEnum.SERVER_ERROR);
+        }
+        return resultData;
+    }
+
 }

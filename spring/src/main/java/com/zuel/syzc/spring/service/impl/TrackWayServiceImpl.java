@@ -49,4 +49,19 @@ public class TrackWayServiceImpl implements TrackWayService {
         }
         return null;
     }
+    @Override
+    public List<UserTrack> getTrackWay1(String userId, Long startTime, Long endTime) {
+//        System.out.println(userId+","+startTime+","+endTime);
+        List<UserTrack> trackWay;
+        if (userId == null) {
+            trackWay = trackWayDao.getUserTrackWay(startTime,endTime);
+        } else {
+            trackWay = trackWayDao.getTrackWay(userId, startTime, endTime);
+        }
+        if (trackWay.size()>0) {
+            return trackWay;
+        } else {
+            return null;
+        }
+    }
 }

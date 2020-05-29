@@ -16,5 +16,11 @@ public interface TrackStayService {
     // 获取Od矩阵
     public List<OdMatrix> getOd(Long startTime, Long endTime);
     // 获取指定区域内人口流入流出量
-    public AreaInOutFlow getInOutFlow(Long startTime,Long endTime,double longitude, double latitude, double radius);
+    public AreaInOutFlow getInOutFlow(Long startTime,Long endTime,double longitude, double latitude, double radius); // 小区划分
+
+    public List<ZoneDivision> getAreaDivision1();
+    // 获取Od矩阵
+    public List<OdMatrix> getOd1(Long startTime, Long endTime);
+    // 获取指定区域内人口流入流出量
+    public AreaInOutFlow getInOutFlow1(Long startTime,Long endTime,double longitude, double latitude, double radius);
 }

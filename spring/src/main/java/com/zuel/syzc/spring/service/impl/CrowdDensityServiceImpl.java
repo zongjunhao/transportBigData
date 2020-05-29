@@ -64,4 +64,13 @@ public class CrowdDensityServiceImpl implements CrowdDensityService {
             return null;
         }
     }
+
+    @Override
+    public List<CellCrowd> getCrowdCount1(Long startTime, Long endTime) {
+        List<CellCrowd> currentCellCounts = currentCellCountDao.select(startTime,endTime);
+        if (currentCellCounts.size()>0)
+            return currentCellCounts;
+        else
+            return null;
+    }
 }

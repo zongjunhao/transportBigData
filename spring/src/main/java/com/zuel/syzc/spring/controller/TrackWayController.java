@@ -36,4 +36,24 @@ public class TrackWayController {
         }
         return resultData;
     }
+
+    @RequestMapping("/getTrackWay1")
+    public ResultData getTrackWay1(String userId,Long startTime,Long endTime) {
+        ResultData<List<UserTrack>> resultData = new ResultData();
+        if (userId ==null || startTime == null) {
+            resultData.setResult(ResultCodeEnum.PARA_WORNING_NULL);
+            return resultData;
+        }
+        if (endTime == null) {
+            endTime = startTime + 1000 * 60 * 60 * 24;
+        }
+        List<UserTrack> trackWay = trackWayService.getTrackWay1(userId, startTime, endTime);
+        if (trackWay!=null){
+            resultData.setData(trackWay);
+            resultData.setResult(ResultCodeEnum.OK);
+        } else {
+            resultData.setResult(ResultCodeEnum.SERVER_ERROR);
+        }
+        return resultData;
+    }
 }

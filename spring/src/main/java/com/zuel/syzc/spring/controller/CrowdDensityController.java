@@ -68,4 +68,25 @@ public class CrowdDensityController {
         }
         return resultData;
     }
+
+    @RequestMapping("/getCrowdCount1")
+    public ResultData getCrowdCount1(Long startTime, Long endTime){
+        ResultData<List<CellCrowd>> resultData = new ResultData<>();
+        if (startTime == null) {
+//            startTime = 1538578800000L;
+            resultData.setResult(ResultCodeEnum.PARA_WORNING_NULL);
+            return resultData;
+        }
+        if (endTime == null) {
+            endTime = startTime + 1000*60*60;
+        }
+        List<CellCrowd> crowdCount = crowdDensityService.getCrowdCount1(startTime, endTime);
+        if (crowdCount!=null){
+            resultData.setData(crowdCount);
+            resultData.setResult(ResultCodeEnum.OK);
+        } else {
+            resultData.setResult(ResultCodeEnum.DB_FIND_FAILURE);
+        }
+        return resultData;
+    }
 }

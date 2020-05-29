@@ -10,6 +10,9 @@ public interface CrowdDensityService {
     public int computeHistoryModel(Long startTime,Long endTime);
 
     // 获取人群分布情况
-    public List<CellCrowd> getCrowdCount(Long startTime, Long endTime);
+    public List<CellCrowd> getCrowdCount(Long startTime, Long endTime); // 计算历史模型
+
+    // 获取人群分布情况
+    public List<CellCrowd> getCrowdCount1(Long startTime, Long endTime);
 
 }
