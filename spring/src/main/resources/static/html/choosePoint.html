@@ -26,6 +26,9 @@
             width: 100%;
             height: 100%;
         }
+        .left-margin{
+            margin-left: 2em;
+        }
     </style>
     <title>圆的绘制和编辑</title>
     <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
@@ -36,9 +39,53 @@
 <div id="mainPage" class="row">
     <div class="panel panel-default panel-body" id="container"></div>
 
-    <div class="input-card" style="width: 120px">
-        <button class="btn" onclick="circleEditor.open()" style="margin-bottom: 5px">选定区域</button>
-        <button class="btn" onclick="circleEditor.close()">结束选定</button>
+    <div class="input-card container" style="top: 2em;bottom: auto;right: 2em;">
+        <h4 style="font-weight: bold;font-size: medium">选定区域内人口流入流出信息</h4>
+
+        <div >
+            <div class="">
+                <label>经度:  <span id="longitude" class="left-margin"></span></label>
+            </div>
+            <div class="">
+                <label>纬度:  <span id="latitude" class="left-margin"></span></label>
+
+            </div>
+            <div class="">
+                <label>半径: <span id="radius" class="left-margin"></span> 米</label>
+
+            </div>
+            <div class="">
+                <label>地址: <span id="address" class="left-margin"></span></label>
+
+            </div>
+            <div class="">
+                <label>流入人数: <span id="inflow" class="left-margin"></span> 人</label>
+
+            </div>
+            <div class="">
+                <label>流出人数: <span id="outflow" class="left-margin"></span> 人</label>
+            </div>
+<!--            <div class="">-->
+<!--                <label>时间</label>-->
+<!--                <select>-->
+<!--                    <option value ="volvo">0点</option>-->
+<!--                    <option value ="saab">1点</option>-->
+<!--                    <option value="opel">2点</option>-->
+<!--                    <option value="audi">Audi</option>-->
+<!--                </select>-->
+<!--            </div>-->
+            <div class="">
+                <div class="col-md-6">
+                    <button class="btn" onclick="circleEditor.open()" style="width: 100px">选定区域</button>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn" onclick="circleEditor.close()" style="width: 100px">结束选定</button>
+                </div>
+            </div>
+
+<!--            <button type="submit" class="btn btn-default">Submit</button>-->
+        </div>
+
     </div>
 </div>
 
@@ -63,31 +110,71 @@
         fillColor: '#1791fc',
         zIndex: 50,
     })
+    var longitude = circle.getCenter().lng;
+    var latitude = circle.getCenter().lat;
+    var radius = circle.getRadius();
 
     circle.setMap(map)
+    $("#longitude").text(circle.getCenter().lng)
+    $("#latitude").text(circle.getCenter().lat)
+    $("#radius").text(circle.getRadius())
     // 缩放地图到合适的视野级别
     map.setFitView([ circle ])
 
     var circleEditor = new AMap.CircleEditor(map, circle)
 
     circleEditor.on('move', function(event) {
+        $("#longitude").text(circle.getCenter().lng)
+        $("#latitude").text(circle.getCenter().lat)
+
         // console.log(event)
         // log.info('触发事件：move')
     })
 
     circleEditor.on('adjust', function(event) {
+        $("#radius").text(circle.getRadius())
         // console.log(event)
         // log.info('触发事件：adjust')
     })
+    var startTime = 1538442000000;
+    var endTime = 1538539200000
+    sendRequest(longitude,latitude,radius,startTime,endTime)
+    getAddress(longitude,latitude)
 
     circleEditor.on('end', function(event) {
-        console.log(circle.getCenter())
-        console.log(circle.getCenter().lng)
-        console.log(circle.getCenter().lat)
-        console.log(circle.getRadius())
-        let longitude = circle.getCenter().lng;
-        let latitude = circle.getCenter().lat;
-        let radius = circle.getRadius();
+        $("#longitude").text(circle.getCenter().lng)
+        $("#latitude").text(circle.getCenter().lat)
+        $("#radius").text(circle.getRadius())
+        longitude = circle.getCenter().lng;
+        latitude = circle.getCenter().lat;
+        radius = circle.getRadius();
+        sendRequest(longitude,latitude,radius,startTime,endTime)
+        getAddress(longitude,latitude)
+    })
+
+    function getAddress(longitude,latitude) {
+        ////restapi.amap.com/v3/geocode/regeo?key=您的key&location=116.481488,39.990464&poitype=&radius=&extensions=base&batch=false&roadlevel=
+        $.ajax({
+            type:"GET",
+            url:"https://restapi.amap.com/v3/geocode/regeo?key=f78f8d954cb41a2d3b84e05e46f552c4&location="+longitude+","+latitude+"&poitype=&radius=&extensions=base&batch=false&roadlevel=",
+            data:{
+            },
+            dataType:"json",
+            success:function(res){
+                console.log(res);
+                // if(res.code=="200"){
+                //     //查找成功
+                $("#address").text(res.regeocode.formatted_address)
+                //     $("#outflow").text(res.data.outflow)
+                // }
+            },
+            error:function(res){
+                // alert("请求的页面有错误");
+            }
+        });
+    }
+
+    function sendRequest(longitude,latitude,radius,startTime,endTime){
         $.ajax({
             type:"GET",
             url:"/stay/getInOutFlow",
@@ -95,49 +182,23 @@
                 longitude:longitude,
                 latitude:latitude,
                 radius : radius,
-                startTime:1538442000000,
-                endTime:1538539200000
+                startTime:startTime,
+                endTime: endTime
             },
-            // dataType:"json",
+            dataType:"json",
             success:function(res){
                 console.log(res);
-                if(res.resultCode=="200"){
+                if(res.code=="200"){
                     //查找成功
-                    console()
-                } else {
-                    //查找失败，没有该条记录
-                    // alert("查找失败")
+                    $("#inflow").text(res.data.inflow)
+                    $("#outflow").text(res.data.outflow)
                 }
-                // console.log("加载了echarts")
-// 				$("#dataTables-example").dataTable();
             },
             error:function(res){
                 // alert("请求的页面有错误");
             }
         });
-        // event.target 即为编辑后的圆形对象
-    })
-    // var app = new Vue({
-    //     el: '#mainPage',
-    //     data() {
-    //         return{
-    //
-    //         }
-    //     },
-    //     methods:{
-    //         request(){
-    //             console.log(666)
-    //         }
-    //     },
-    //     created(){
-    //
-    //     },
-    //     mounted(){
-    //     },
-    //     watch: {
-    //
-    //     }
-    // });
+    }
 </script>
 </body>
 

@@ -41,15 +41,15 @@ public class CrowdDensity {
         System.out.println(crowdFlow);
         System.out.println(DateUtil.getDayHour("2018-10-02-09")+"  "+DateUtil.getDayHour("2018-10-03-12"));
         // 计算在某个指定多边形区域内的流入流出人数
-//        List<BaseStationPoint> points = new ArrayList<>();
-//        points.add(new BaseStationPoint(0, 0));
-//        points.add(new BaseStationPoint(1, 0));
-//        points.add(new BaseStationPoint(2, 1));
-//        points.add(new BaseStationPoint(1, 2));
-//        points.add(new BaseStationPoint(0, 2));
-//        points.add(new BaseStationPoint(1, 1));
-//        String crowdInOutFlow = new CrowdDensity().crowdInflowAndOutflow(spark, "2018-10-02-09", "2018-10-03-12", points);
-//        System.out.println(crowdInOutFlow);
+        List<BaseStationPoint> points = new ArrayList<>();
+        points.add(new BaseStationPoint(0, 0));
+        points.add(new BaseStationPoint(1, 0));
+        points.add(new BaseStationPoint(2, 1));
+        points.add(new BaseStationPoint(1, 2));
+        points.add(new BaseStationPoint(0, 2));
+        points.add(new BaseStationPoint(1, 1));
+        String crowdInOutFlow = new CrowdDensity(spark).crowdInflowAndOutflow( DateUtil.getDayHour("2018-10-02-09"), DateUtil.getDayHour("2018-10-03-12"), points);
+        System.out.println(crowdInOutFlow);
     }
 
     /**

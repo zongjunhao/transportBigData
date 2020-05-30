@@ -6,16 +6,17 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>Transport</title>
     <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
-    <link rel="stylesheet" href="/css/animate.css" type="text/css" />
-    <link rel="stylesheet" href="/css/font-awesome.min.css" type="text/css" />
-    <link rel="stylesheet" href="/css/simple-line-icons.css" type="text/css" />
-    <link rel="stylesheet" href="/css/font.css" type="text/css" />
+<!--    <link rel="stylesheet" href="/css/animate.css" type="text/css" />-->
+<!--    <link rel="stylesheet" href="/css/font-awesome.min.css" type="text/css" />-->
+<!--    <link rel="stylesheet" href="/css/simple-line-icons.css" type="text/css" />-->
+<!--    <link rel="stylesheet" href="/css/font.css" type="text/css" />-->
 <!--    <link rel="stylesheet" href="/css/app.css" type="text/css" />-->
     <!-- 引用vue -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="/vendor/jquery/jquery.min.js"></script>
     <script src="/vendor/jquery/bootstrap.js"></script>
     <script src="/js/echarts/echarts.min.js"></script>
+    <script src="/js/scrollReveal.js"></script>
     <style>
         html,
         body,
@@ -24,7 +25,7 @@
             height: 100%;
         }
         html{
-            background-color: #2f3342;
+            background-color: #020d22;
         }
         body,#mainpage{
             background-color: transparent;
@@ -35,28 +36,64 @@
             font-weight: bold;
             text-align: center;
         }
+
+        .block1{
+            width: 100%;
+            /*background-color: white;*/
+            height: 600px;
+            /*color: black;*/
+        }
+        .block2{
+            width: 100%;
+            /*background-color: black;*/
+            padding: 50px auto;
+            height: 800px;
+            color: whitesmoke;
+        }
+        * { margin: 0; padding: 0;}
+        .dowebok { font-family: "Microsoft Yahei";}
+        .dowebok h1 { margin: 150px 0 50px; font-size: 60px; font-weight: 500; color: #fff; text-align: center;}
+        .dowebok h2 { margin: 50px 0; font-size: 45px; font-weight: 500; color: #fdf5f2; text-align: center;}
+        .dowebok h3 { margin: 40px auto; font-size: 35px; font-weight: 500; color: #fdf5f2; text-align: left;}
     </style>
 </head>
-<body>
-<div id="mainpage" class="row">
-    <h2>2019年10月3日 总出行次数：1108次</h2>
-    <h2>2019年10月3日 出行用户个数：114名</h2>
-    <div class="row">
-        <div class="col-md-6">
-            <div style="width: 100%;height:600px;padding: 5%;border-radius: 15px;" id="total">
-            </div>
+<body class="dowebok">
+<div id="mainpage" class="">
+    <div class="block1">
+        <h1 data-scroll-reveal="enter from the top over 0.5s">2019年10月3日 出行分析</h1>
+        <h2 data-scroll-reveal="enter from the top over 1.5s">共计</h2>
+        <h2 data-scroll-reveal="enter bottom but wait 1.5s">出行次数：1108次</h2>
+        <h2 data-scroll-reveal="enter bottom but wait 2.5s">出行用户：114名</h2>
+    </div>
+    <div class="block2">
+        <h2 data-scroll-reveal="enter right after 0.5s">三种交通方式的占比为：</h2>
+        <div class="col-md-8">
+            <div style="width: 100%;height:600px;margin: 20px;" id="total" data-scroll-reveal="enter left after 1s"></div>
         </div>
-        <div class="col-md-6">
-            <div style="width: 100%;height:600px;padding: 5%;border-radius: 15px;" id="userTrack">
-
+        <div class="col-md-4" style="height: 600px" data-scroll-reveal="enter right after 1s">
+            <div style="margin: 60% auto;">
+                <h3>步行：63.17%</h3>
+                <h3>小汽车和公交：22.66%</h3>
+                <h3>轨道交通：14.17%</h3>
             </div>
         </div>
     </div>
-    <div style="width: 100%">
-
+    <div class="block2 ">
+        <h2 data-scroll-reveal="enter right after 0.5s">选择每种交通的用户数：</h2>
+        <div style="width: 80%;height:600px;margin: 0 10%" id="userTrack" data-scroll-reveal="enter bottom but wait 1s">
+        </div>
+    </div>
+    <div class="block2 " style="padding-top: 50px;">
+        <h2 data-scroll-reveal="enter right after 0.5s">不同时间段的出行记录次数：</h2>
+        <div style="width: 90%;height:600px;margin: auto;" id="timeTrack" data-scroll-reveal="enter bottom but wait 1s">
+        </div>
+    </div>
+    <div class="container" style="padding-top: 50px; height: 500px">
+        <div class="row" style="text-align: center" data-scroll-reveal="enter top but wait 1s">
+            <button type="button" class="btn btn-outline-light" style="background-color: transparent;color: white;border-color: white;margin: 10% auto" @click="click">点击查看个人出行方式</button>
+        </div>
 
     </div>
-
 
 </div>
 
@@ -81,13 +118,13 @@
                     name: '公交和小汽车',
                     value: '251次'
                 }, {
-                    name: '地铁',
+                    name: '轨道交通',
                     value: '157次'
                 }];
 
                 var datalist = [{
                     offset: [70, 35],
-                    symbolSize: 170,
+                    symbolSize: 210,
                     opacity: .95,
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
                         offset: 0,
@@ -99,7 +136,7 @@
                 },
                     {
                     offset: [45, 70],
-                    symbolSize: 115,
+                    symbolSize: 135,
                     opacity: .95,
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
                         offset: 0,
@@ -111,7 +148,7 @@
                 }
                 , {
                     offset: [23, 43],
-                    symbolSize: 90,
+                    symbolSize: 110,
                     opacity: .95,
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
                         offset: 0,
@@ -168,14 +205,7 @@
                     })
                 }
                 option = {
-                    title: {
-                        text: '各种交通方式识别个数',
-                        left: 'center',
-                        textStyle: {
-                            color: '#fff',
-                        }
-                    },
-                    backgroundColor: '#20203e',
+                    backgroundColor: 'transparent',
                     grid: {
                         show: false,
                         top: 10,
@@ -208,7 +238,7 @@
                                 formatter: '{b}',
                                 color: '#fff',
                                 textStyle: {
-                                    fontSize: '20'
+                                    fontSize: '30'
                                 }
                             },
                         },
@@ -245,14 +275,7 @@
                     }
                 ];
                 option = {
-                    title: {
-                        text: '每种交通公交使用人数',
-                        left: 'center',
-                        textStyle: {
-                            color: '#fff',
-                        }
-                    },
-                    backgroundColor: '#0E2A43',
+                    backgroundColor: 'transparent',
                     tooltip: {
                         show: true,
                         formatter: "{b}:{c}"
@@ -276,6 +299,7 @@
                             show: false,
                             lineStyle: {
                                 color: '#fff',
+                                fontSize: 25,
                             }
                         },
                         splitLine: {
@@ -298,9 +322,15 @@
                             show: false,
                             lineStyle: {
                                 color: '#fff',
+
                             }
                         },
-                        data: ['步行', '公交和小汽车', '地铁']
+                        axisLabel:{
+                            fontSize: 25,
+                        },
+
+
+                        data: ['步行', '公交和小汽车', '轨道交通']
                     }
 
                     ],
@@ -311,9 +341,10 @@
                             normal: {
                                 show: true,
                                 position: 'right',
-                                formatter: '{c}',
+                                formatter: '{c}人',
                                 textStyle: {
-                                    color: 'white' //color of value
+                                    color: 'white' ,//color of value
+                                    fontSize: 25,
                                 }
                             }
                         },
@@ -377,16 +408,281 @@
                 };
                 myChart.setOption(option)
             },
-            request(){
-                console.log(666)
+            timeTrack(){
+                var myChart = echarts.init(document.getElementById('timeTrack'));
+                let data = {
+                    "chart": [
+                        {
+                            month: "0点",
+                            value: 37,
+                            ratio: 14.89
+                        },
+
+                        {
+                            month: "1点",
+                            value: 33,
+                            ratio: 79.49
+                        },
+
+                        {
+                            month: "2点",
+                            value: 16,
+                            ratio: 75.8
+                        },
+
+                        {
+                            month: "3点",
+                            value: 9,
+                            ratio: 19.8
+                        },
+
+                        {
+                            month: "4点",
+                            value: 8,
+                            ratio: 44.5
+                        },
+
+
+                        {
+                            month: "5点",
+                            value: 15,
+                            ratio: 87.3
+                        },
+                        {
+                            month: "6点",
+                            value: 19,
+                            ratio: 14.89
+                        },
+
+                        {
+                            month: "7点",
+                            value: 13,
+                            ratio: 79.49
+                        },
+
+                        {
+                            month: "8点",
+                            value: 41,
+                            ratio: 75.8
+                        },
+
+                        {
+                            month: "9点",
+                            value: 34,
+                            ratio: 19.8
+                        },
+
+                        {
+                            month: "10点",
+                            value: 66,
+                            ratio: 44.5
+                        },
+
+
+                        {
+                            month: "11点",
+                            value: 60,
+                            ratio: 87.3
+                        },
+                        {
+                            month: "12点",
+                            value: 37,
+                            ratio: 14.89
+                        },
+
+                        {
+                            month: "13点",
+                            value: 36,
+                            ratio: 79.49
+                        },
+
+                        {
+                            month: "14点",
+                            value: 46,
+                            ratio: 75.8
+                        },
+
+                        {
+                            month: "15点",
+                            value: 44,
+                            ratio: 19.8
+                        },
+
+                        {
+                            month: "16点",
+                            value: 74,
+                            ratio: 44.5
+                        },
+
+
+                        {
+                            month: "17点",
+                            value: 70,
+                            ratio: 87.3
+                        },
+                        {
+                            month: "18点",
+                            value: 68,
+                            ratio: 14.89
+                        },
+
+                        {
+                            month: "19点",
+                            value: 71,
+                            ratio: 79.49
+                        },
+
+                        {
+                            month: "20点",
+                            value: 87,
+                            ratio: 75.8
+                        },
+
+                        {
+                            month: "21点",
+                            value: 62,
+                            ratio: 19.8
+                        },
+
+                        {
+                            month: "22点",
+                            value: 87,
+                            ratio: 44.5
+                        },
+
+
+                        {
+                            month: "23点",
+                            value: 95,
+                            ratio: 87.3
+                        }
+
+                    ]
+                }
+
+
+                let xAxisMonth = [],
+                    barData = [],
+                    lineData = [];
+                for (let i = 0; i < data.chart.length; i++) {
+                    xAxisMonth.push(data.chart[i].month);
+                    barData.push({
+                        "name": xAxisMonth[i],
+                        "value": data.chart[i].value
+                    });
+                    lineData.push({
+                        "name": xAxisMonth[i],
+                        "value": data.chart[i].ratio
+                    });
+                }
+
+                option = {
+                    backgroundColor: "transparent",
+                    title: '',
+                    grid: {
+                        // top: '24%',
+                        left: '1%',
+                        right:'1%',
+                        bottom: '6%',
+                        containLabel: true
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'none'
+                        },
+                        // formatter: function(params) {
+                        //     return params[0]["data"].name + "<br/>" + '训练人次: ' + params[1]["data"].value + "<br/>" + '合格率: ' + params[0]["data"].value;
+                        // }
+                    },
+                    xAxis: [
+                        {
+                            type: 'category',
+                            show: true,
+                            data: ['0点', '1点', '2点', '3点', '4点', '5点','6点', '7点', '8点', '9点', '10点', '11点',
+                                '12点', '13点', '14点', '15点', '16点', '17点','18点', '19点', '20点', '21点', '22点', '23点'],
+                            axisLabel: {
+                                textStyle: {
+                                    color: '#b6b5ab'
+                                }
+                            }
+                        },
+                        {
+                            type: 'category',
+                            position: "bottom",
+                            // data: xAxisMonth,
+                            boundaryGap: true,
+                            // offset: 40,
+                            axisTick: {
+                                show: false
+                            },
+                            axisLine: {
+                                show: false
+                            },
+                            axisLabel: {
+                                textStyle: {
+                                    color: '#b6b5ab'
+                                }
+                            }
+                        }
+
+                    ],
+                    yAxis: [{
+                        show: true,
+                        splitLine: {
+                            show: false,
+                            lineStyle: {
+                                color: "rgba(255,255,255,0.2)"
+                            }
+                        },
+                        axisLine: {
+                            show: true
+                        },
+                        axisLabel: {
+                            show: true,
+                            color: '#b6b5ab'
+                        }
+                    }],
+                    color: ['#A7F5F9'],
+                    series: [{
+                        name: '训练人次',
+                        type: 'pictorialBar',
+                        xAxisIndex: 1,
+                        barWidth: 10,
+                        symbol: 'path://d="M150 130 L130 50 L170 50 Z"',
+                        itemStyle: {
+                            emphasis: {
+                                opacity: 1
+                            }
+                        },
+                        data: barData,
+                    },
+                        {
+                            symbol: 'circle',
+                            symbolSize: 16,
+                            symbolOffset: [0, '-50%'],
+                            symbolPosition: 'end',
+                            name: "完成率",
+                            type: "pictorialBar",
+                            xAxisIndex: 0,
+                            data: barData
+                        }
+                    ]
+                }
+                myChart.setOption(option)
+            },
+            click(){
+                window.location.href = "/html/trackUser.html";
             }
         },
         created(){
 
         },
         mounted(){
+            window.scrollReveal = new scrollReveal({ reset: true, move: '50px'});
             this.total();
             this.userTrack();
+            this.timeTrack();
         },
         watch: {
 
