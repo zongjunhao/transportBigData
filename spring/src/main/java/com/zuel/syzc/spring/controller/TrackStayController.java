@@ -2,14 +2,13 @@ package com.zuel.syzc.spring.controller;
 
 import com.zuel.syzc.spring.constant.enums.ResultCodeEnum;
 import com.zuel.syzc.spring.model.dto.OdDetail;
-import com.zuel.syzc.spring.model.dto.UserTrack;
 import com.zuel.syzc.spring.model.entity.AreaInOutFlow;
 import com.zuel.syzc.spring.model.entity.OdMatrix;
-import com.zuel.syzc.spring.model.entity.OdMatrixAll;
 import com.zuel.syzc.spring.model.entity.ZoneDivision;
 import com.zuel.syzc.spring.model.vo.ResultData;
 import com.zuel.syzc.spring.service.TrackStayService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -101,6 +100,7 @@ public class TrackStayController {
         return resultData;
     }
 
+    @CrossOrigin
     @RequestMapping("/getOd1")
     public  ResultData getOd1(Long startTime,Long endTime,Integer startZone,Integer endZone){
         ResultData<List<OdDetail>> resultData = new ResultData();

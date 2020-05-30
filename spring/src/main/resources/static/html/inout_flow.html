@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css"/>
+    <style>
+        html,
+        body,
+        #containers {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+        }
+
+        .container {
+            height: 100%;
+            width: 50%;
+            margin: 0;
+        }
+
+        #containers {
+            display: flex;
+        }
+
+    </style>
+</head>
+<body>
+<div id="containers">
+    <div id="out-container" class="container"></div>
+    <div id="in-container" class="container"></div>
+</div>
+<script src="//a.amap.com/Loca/static/dist/jquery.min.js"></script>
+<script src="https://webapi.amap.com/maps?v=1.4.15&key=572552fe424d121536dd050c1adff15d"></script>
+<script src="//webapi.amap.com/loca?v=1.3.2&key=572552fe424d121536dd050c1adff15d"></script>
+<script>
+    draw_map(1)
+
+
+    function draw_map(zone_id) {
+        // 小区流出
+        $.get("http://localhost:8090/stay/getOd1?startZone=" + zone_id, function (response) {
+            console.log("out data", response.data)
+            let response_data = response.data
+
+            let pointLayer
+            let labelsLayer
+
+            let map = new AMap.Map('out-container', {
+                mapStyle: 'amap://styles/whitesmoke',
+                zoom: 13,
+                center: [123.4231, 41.8011],
+                features: ['bg', 'road'],
+                eventSupport: true,  // 图层事件支持，LabelsLayer 默认开启
+                fitView: true,
+                visible: true,
+                zIndex: 99,
+                collision: false  // 是否开启文字自动避让
+            });
+            // 点图层
+            pointLayer = new Loca.PointLayer({
+                map: map
+            });
+
+            pointLayer.setData(response_data, {
+                lnglat: function (obj) {
+                    var value = obj.value.endPoint;
+                    var lnglat = [value['longitude'], value['latitude']];
+                    // console.log(lnglat, new Date().getMilliseconds(), obj.index, value['timestamp']);
+                    return lnglat;
+                },
+                // type: 'csv'
+            }).setOptions({
+                style: {
+                    // 圆形半径，单位像素
+                    radius: 6,
+                    // 填充颜色
+                    color: '#FF0000',
+                    // 描边颜色
+                    borderColor: '#FF0000',
+                    // 描边宽度，单位像素
+                    borderWidth: 1,
+                    // 透明度 [0-1]
+                    opacity: 1,
+                }
+            }).render();
+
+            // 文字标记图层
+            labelsLayer = new Loca.LabelsLayer({
+                zooms: [3, 20],
+                zIndex: 1000,
+                // 开启标注避让，默认为开启，v1.4.15 新增属性
+                collision: true,
+                // 开启标注淡入动画，默认为开启，v1.4.15 新增属性
+                // animation: true,
+                map: map,
+            });
+
+            labelsLayer.setData(response_data, {
+                lnglat: function (obj) {
+                    let value = obj.value.endPoint;
+                    return [value['longitude'], value['latitude']];
+                },
+            }).setOptions({
+                style: {
+                    direction: "top",  // 文字位置
+                    offset: [0, 0],  // 文字偏移距离
+                    zooms: [3, 18],  // 文字显示范围
+                    text: function (data) {
+                        var value = data.value;
+                        // "index" + value[indexedDB] +
+                        return "end zone:" + value['endId'] + " count:" + value['count']
+                    },  // 文本内容
+                    // fillColor: function () {
+                    //     return `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`
+                    // },  // 文字填充色
+                    // fontFamily: '字体',  // 文字字体(2D)
+                    // fontSize: 30,  // 文字大小, 默认值：12
+                    fontWeight: "normal",  // 文字粗细(2D)。 可选值： 'normal'| 'lighter'| 'bold' 。默认值：'normal'
+                    strokeColor: "rgba(255,255,255,0.85)",  // 文字描边颜色
+                    strokeWidth: 1,  // 文字描边宽度
+                }
+            }).render();
+
+            for (let i = 0; i < response_data.length; i++) {
+                let path = []
+                let content = response_data[i].startPoint
+                path.push([parseFloat(content.longitude), parseFloat(content.latitude)])
+                content = response_data[i].endPoint
+                path.push([parseFloat(content.longitude), parseFloat(content.latitude)])
+                let polyline = new AMap.Polyline({
+                    path: path,
+                    borderWeight: 1, // 线条宽度，默认为 1
+                    strokeWeight: 6,
+                    strokeOpacity: 1,
+                    strokeColor: 'red',
+                    zIndex: 1000,
+                    showDir: true
+                });
+                map.add(polyline);
+            }
+            map.setFitView()
+        })
+        // 小区流入
+        $.get("http://localhost:8090/stay/getOd1?endZone=" + zone_id, function (response) {
+            console.log("in data", response.data)
+            let response_data = response.data
+
+            let pointLayer
+            let labelsLayer
+
+            let map = new AMap.Map('in-container', {
+                mapStyle: 'amap://styles/whitesmoke',
+                zoom: 13,
+                center: [123.4231, 41.8011],
+                features: ['bg', 'road'],
+                eventSupport: true,  // 图层事件支持，LabelsLayer 默认开启
+                fitView: true,
+                visible: true,
+                zIndex: 99,
+                collision: false  // 是否开启文字自动避让
+            });
+            // 点图层
+            pointLayer = new Loca.PointLayer({
+                map: map
+            });
+
+            pointLayer.setData(response_data, {
+                lnglat: function (obj) {
+                    var value = obj.value.startPoint;
+                    var lnglat = [value['longitude'], value['latitude']];
+                    // console.log(lnglat, new Date().getMilliseconds(), obj.index, value['timestamp']);
+                    return lnglat;
+                },
+                // type: 'csv'
+            }).setOptions({
+                style: {
+                    // 圆形半径，单位像素
+                    radius: 6,
+                    // 填充颜色
+                    color: '#FF0000',
+                    // 描边颜色
+                    borderColor: '#FF0000',
+                    // 描边宽度，单位像素
+                    borderWidth: 1,
+                    // 透明度 [0-1]
+                    opacity: 1,
+                }
+            }).render();
+
+            // 文字标记图层
+            labelsLayer = new Loca.LabelsLayer({
+                zooms: [3, 20],
+                zIndex: 1000,
+                // 开启标注避让，默认为开启，v1.4.15 新增属性
+                collision: true,
+                // 开启标注淡入动画，默认为开启，v1.4.15 新增属性
+                // animation: true,
+                map: map,
+            });
+
+            labelsLayer.setData(response_data, {
+                lnglat: function (obj) {
+                    let value = obj.value.startPoint;
+                    return [value['longitude'], value['latitude']];
+                },
+            }).setOptions({
+                style: {
+                    direction: "top",  // 文字位置
+                    offset: [0, 0],  // 文字偏移距离
+                    zooms: [3, 18],  // 文字显示范围
+                    text: function (data) {
+                        var value = data.value;
+                        // "index" + value[indexedDB] +
+                        return "start zone:" + value['startId'] + " count:" + value['count']
+                    },  // 文本内容
+                    // fillColor: function () {
+                    //     return `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`
+                    // },  // 文字填充色
+                    // fontFamily: '字体',  // 文字字体(2D)
+                    // fontSize: 30,  // 文字大小, 默认值：12
+                    fontWeight: "normal",  // 文字粗细(2D)。 可选值： 'normal'| 'lighter'| 'bold' 。默认值：'normal'
+                    strokeColor: "rgba(255,255,255,0.85)",  // 文字描边颜色
+                    strokeWidth: 1,  // 文字描边宽度
+                }
+            }).render();
+
+            for (let i = 0; i < response_data.length; i++) {
+                let path = []
+                let content = response_data[i].startPoint
+                path.push([parseFloat(content.longitude), parseFloat(content.latitude)])
+                content = response_data[i].endPoint
+                path.push([parseFloat(content.longitude), parseFloat(content.latitude)])
+                let polyline = new AMap.Polyline({
+                    path: path,
+                    borderWeight: 1, // 线条宽度，默认为 1
+                    strokeWeight: 6,
+                    strokeOpacity: 1,
+                    strokeColor: 'red',
+                    zIndex: 1000,
+                    showDir: true
+                });
+                map.add(polyline);
+            }
+            map.setFitView()
+        })
+    }
+</script>
+</body>
+</html>
