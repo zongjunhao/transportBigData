@@ -37,13 +37,13 @@ public class MinimumBoundingPolygon {
         // spark sql上下文对象
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision(spark);
-        JavaRDD<Tuple6<String, Integer, Double, Double, Long, Integer>> result = trafficZoneDivision.divisionTrafficZoneByKmeans(null,null);
+        JavaRDD<Tuple6<String, Long, String, Double, Double, Integer>> result = trafficZoneDivision.divisionTrafficZoneByKmeans(null,null);
 //        result.collect().forEach(System.out::println);
-        result.groupBy(x->x._6()).foreach(x->{
-            System.out.println("\n"+x._1);
-            List<Tuple6<String, Integer, Double, Double, Long, Integer>> list = IteratorUtils.toList(x._2.iterator());
-            list.forEach(System.out::println);
-        });
+//        result.groupBy(x->x._6()).foreach(x->{
+//            System.out.println("\n"+x._1);
+//            List<Tuple6<String, Integer, Double, Double, Long, Integer>> list = IteratorUtils.toList(x._2.iterator());
+//            list.forEach(System.out::println);
+//        });
 //        MinimumBoundingPolygon.findSmallestPolygon()
     }
 

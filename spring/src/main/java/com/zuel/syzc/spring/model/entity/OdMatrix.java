@@ -1,5 +1,6 @@
 package com.zuel.syzc.spring.model.entity;
 
+import com.zuel.syzc.spring.model.dto.Point;
 import lombok.Data;
 import lombok.ToString;
 

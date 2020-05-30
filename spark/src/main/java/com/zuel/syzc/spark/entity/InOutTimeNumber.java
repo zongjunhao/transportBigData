@@ -1,4 +1,4 @@
-package com.zuel.syzc.spark.crowd;
+package com.zuel.syzc.spark.entity;
 
 public class InOutTimeNumber{
     private long timestamp;
