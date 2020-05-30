@@ -17,11 +17,15 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
     <!-- SweetAlert2 -->
-<!--    <link rel="stylesheet" href="../plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">-->
+    <!--    <link rel="stylesheet" href="../plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">-->
     <link rel="stylesheet" href="../plugins/sweetalert2/sweetalert2.min.css">
-
+    <style>
+        .embed-responsive-16by9::before {
+            padding-top: 42%;
+        }
+    </style>
 </head>
-<body class="sidebar-mini sidebar-collapse" >
+<body class="sidebar-mini sidebar-collapse">
 <div class="wrapper" id="mainpage">
 
     <!-- Navbar -->
@@ -78,15 +82,18 @@
                     <div>
                         <div class="form-group">
                             <label for="old_password">旧密码</label>
-                            <input type="password" class="form-control" :class="{'is-invalid': !is_old_valid}" id="old_password" placeholder="输入旧密码" required v-model="original_password">
+                            <input type="password" class="form-control" :class="{'is-invalid': !is_old_valid}"
+                                   id="old_password" placeholder="输入旧密码" required v-model="original_password">
                         </div>
                         <div class="form-group">
                             <label for="new_password">新密码</label>
-                            <input type="password" class="form-control" :class="{'is-invalid': !is_password_valid}" id="new_password" placeholder="输入新密码" required v-model="password">
+                            <input type="password" class="form-control" :class="{'is-invalid': !is_password_valid}"
+                                   id="new_password" placeholder="输入新密码" required v-model="password">
                         </div>
                         <div class="form-group">
                             <label for="retype_password">确认新密码</label>
-                            <input type="password" class="form-control" :class="{'is-invalid': !is_retype_valid}" id="retype_password" placeholder="确认新密码" required v-model="retype_password">
+                            <input type="password" class="form-control" :class="{'is-invalid': !is_retype_valid}"
+                                   id="retype_password" placeholder="确认新密码" required v-model="retype_password">
                         </div>
                     </div>
                 </div>
@@ -110,7 +117,8 @@
         <div class="sidebar">
             <!-- Sidebar Menu -->
             <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                    data-accordion="false">
                     <li class="nav-item  has-treeview">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-user-astronaut"></i>
@@ -122,13 +130,13 @@
                         <ul class="nav nav-treeview" style="display: none;">
                             <li class="nav-item">
                                 <a href="/html/OD.html" class="nav-link" target="main">
-                                    <span class="iconfont icongonggao" ></span>
+                                    <span class="iconfont icongonggao"></span>
                                     <p>小区划分&OD分析</p>
                                 </a>
                             </li>
                             <li class="nav-item has-treeview">
                                 <a href="/html/choosePoint.html" class="nav-link" target="main">
-                                    <span class="iconfont icontianjiakecheng" ></span>
+                                    <span class="iconfont icontianjiakecheng"></span>
                                     <p>选定区域人流量分析</p>
                                 </a>
                             </li>
@@ -143,13 +151,13 @@
                         <ul class="nav nav-treeview" style="display: none;">
                             <li class="nav-item">
                                 <a href="/html/trackWayAll.html" class="nav-link" target="main">
-                                    <span class="iconfont iconwendang1" ></span>
+                                    <span class="iconfont iconwendang1"></span>
                                     <p>整体出行方式</p>
                                 </a>
                             </li>
                             <li class="nav-item has-treeview">
                                 <a href="/html/trackUser.html" class="nav-link" target="main">
-                                    <span class="iconfont iconwendang" ></span>
+                                    <span class="iconfont iconwendang"></span>
                                     <p>个人出行方式</p>
                                 </a>
                             </li>
@@ -163,7 +171,7 @@
                         <ul class="nav nav-treeview" style="display: none;">
                             <li class="nav-item">
                                 <a href="/html/crowd.html" class="nav-link" target="main">
-                                    <span class="iconfont iconwendang1" ></span>
+                                    <span class="iconfont iconwendang1"></span>
                                     <p>特定人群分布情况</p>
                                 </a>
                             </li>
@@ -178,7 +186,7 @@
         <!-- /.sidebar -->
     </aside>
     <!-- Content Wrapper. Contains page content -->
-    <div class="content-wrapper"  >
+    <div class="content-wrapper">
         <div class="content">
             <!-- 主页内容 -->
             <div class="embed-responsive embed-responsive-16by9">
@@ -216,20 +224,15 @@
     var app = new Vue({
         el: '#mainpage',
         data() {
-            return{
-
-            }
+            return {}
         },
-        methods:{
+        methods: {},
+        filters: {},
+        created() {
         },
-        filters: {
+        mounted() {
         },
-        created(){
-        },
-        mounted(){
-        },
-        watch: {
-        }
+        watch: {}
     });
 
 </script>
