@@ -13,7 +13,7 @@ import java.util.List;
 public interface ZoneDivisonDao extends BaseMapper<ZoneDivision> {
     @Select("select avg(longitude) longitude,avg(latitude) latitude,zone " +
             "from zone_division " +
-            "group by zone")
+            "group by zone order by zone")
     List<ZoneDivision> getCenterZone();
 
 }
