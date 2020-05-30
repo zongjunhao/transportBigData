@@ -11,6 +11,7 @@ import java.util.List;
 public interface TrackStayService {
     // 小区划分
     public int areaDivision(Long startTime,Long endTime);
+    public List<ZoneDivision> zoneCenter();
 
     public List<ZoneDivision> getAreaDivision();
     // 获取Od矩阵

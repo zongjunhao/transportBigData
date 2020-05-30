@@ -3,7 +3,9 @@ package com.zuel.syzc.spring;
 import com.zuel.syzc.spark.SparkEntry;
 import com.zuel.syzc.spring.dao.TaskDao;
 import com.zuel.syzc.spring.dao.UserTrackDetailDao;
+import com.zuel.syzc.spring.dao.ZoneDivisonDao;
 import com.zuel.syzc.spring.model.entity.Task;
+import com.zuel.syzc.spring.model.entity.ZoneDivision;
 import com.zuel.syzc.spring.service.CrowdDensityService;
 import com.zuel.syzc.spring.service.impl.CrowdDensityServiceImpl;
 import com.zuel.syzc.spring.utils.SparkSubmit;
@@ -28,6 +30,13 @@ class ApplicationTests {
     private CrowdDensityService crowdDensityService;
     @Autowired
     UserTrackDetailDao userTrackDetailDao;
+    @Autowired
+    ZoneDivisonDao zoneDivisonDao;
+    @Test
+    void zone(){
+        List<ZoneDivision> centerZone = zoneDivisonDao.getCenterZone();
+        centerZone.forEach(System.out::println);
+    }
     @Test
     void user(){
         List<String> allUser = userTrackDetailDao.getAllUser();

@@ -113,4 +113,16 @@ public class TrackStayController {
         return resultData;
     }
 
+    @RequestMapping("/getZoneCenter")
+    public ResultData getZoneCenter(){
+        ResultData<List<ZoneDivision>> resultData = new ResultData<>();
+        List<ZoneDivision> zoneDivisions = trackStayService.zoneCenter();
+        if (zoneDivisions != null ) {
+            resultData.setData(zoneDivisions);
+            resultData.setResult(ResultCodeEnum.OK);
+        } else {
+            resultData.setResult(ResultCodeEnum.SERVER_ERROR);
+        }
+        return resultData;
+    }
 }

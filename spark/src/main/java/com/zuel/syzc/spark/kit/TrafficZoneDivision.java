@@ -69,13 +69,13 @@ public class TrafficZoneDivision {
 
         Dataset<Row> resultDataset = spark.createDataFrame(zone, schema);
         resultDataset.show();
-        resultDataset.write().format("jdbc").mode(SaveMode.Overwrite)
-                .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
-                .option("dbtable", "zone_division")
-                .option("batchsize",10000)
-                .option("isolationLevel","NONE")
-                .option("truncate","false")
-                .option("user", "root").option("password", "root").save();
+//        resultDataset.write().format("jdbc").mode(SaveMode.Overwrite)
+//                .option("url", "jdbc:mysql://106.15.251.188:3306/transport_big_data")
+//                .option("dbtable", "zone_division")
+//                .option("batchsize",10000)
+//                .option("isolationLevel","NONE")
+//                .option("truncate","false")
+//                .option("user", "root").option("password", "root").save();
         return result;
 
 

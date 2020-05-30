@@ -1,6 +1,11 @@
 package com.zuel.syzc.spark.kit;
 
 import com.zuel.syzc.spark.entity.BaseStationPoint;
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.SparkSession;
+import scala.Tuple6;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -27,6 +32,20 @@ import java.util.List;
  * @author ManerFan 2015年4月17日
  */
 public class MinimumBoundingPolygon {
+    public static void main(String[] args) {
+        SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
+        // spark sql上下文对象
+        SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
+        TrafficZoneDivision trafficZoneDivision = new TrafficZoneDivision(spark);
+        JavaRDD<Tuple6<String, Integer, Double, Double, Long, Integer>> result = trafficZoneDivision.divisionTrafficZoneByKmeans(null,null);
+//        result.collect().forEach(System.out::println);
+        result.groupBy(x->x._6()).foreach(x->{
+            System.out.println("\n"+x._1);
+            List<Tuple6<String, Integer, Double, Double, Long, Integer>> list = IteratorUtils.toList(x._2.iterator());
+            list.forEach(System.out::println);
+        });
+//        MinimumBoundingPolygon.findSmallestPolygon()
+    }
 
     /**
      * 边界查找入口

@@ -47,6 +47,15 @@ public class TrackStayServiceImpl implements TrackStayService {
     }
 
     @Override
+    public List<ZoneDivision> zoneCenter() {
+        List<ZoneDivision> centerZone = zoneDivisonDao.getCenterZone();
+        if (centerZone.size()>0) {
+            return centerZone;
+        }
+        return null;
+    }
+
+    @Override
     public List<ZoneDivision> getAreaDivision() {
         List<ZoneDivision> zoneDivisions = zoneDivisonDao.selectList(null);
         if (zoneDivisions.size()>0) {
