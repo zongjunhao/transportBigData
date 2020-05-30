@@ -35,138 +35,155 @@
 <script src="//webapi.amap.com/loca?v=1.3.2&key=572552fe424d121536dd050c1adff15d"></script>
 
 <script type="text/javascript">
-    var index = 0;
-    var pointLayer;
-    var labelsLayer;
-    $(".previous").click(function () {
-        if (index > 0) {
-            index--;
-            $(".title").text(fileList[index]);
-            setData();
-        }
-        console.log(index)
+    // let get_response = $.get("/way/getAllUser")
+    // console.log(get_response)
+    // let responseJSON = get_response.responseJSON
+    // console.log(responseJSON)
+    // let user_ids = responseJSON.data
+    // console.log(user_ids)
+    $.get("/way/getAllUser", function (user_response) {
+        console.log(user_response.data)
+        let user_ids = user_response.data
 
-    });
-    $(".next").click(function () {
-        if (index < 113) {
-            index++;
-            setData();
-            $(".title").text(fileList[index]);
-        }
-        console.log(index)
-    });
-
-    var fileList = ['460000095005561145.csv', '460000095005565778.csv', '460000095005571676.csv', '460000095007329090.csv', '460000095007687263.csv', '460000095009768355.csv', '460000095009824436.csv', '460000095018240151.csv', '460000095028482910.csv', '460000095040541608.csv', '460000095040591270.csv', '460000095057074060.csv', '460000095060523239.csv', '460000095062189004.csv', '460000095062225863.csv', '460000095063856923.csv', '460000095063881983.csv', '460000095063979850.csv', '460000095064919090.csv', '460000095064990351.csv', '460000095071779102.csv', '460000095073912558.csv', '460000095074423059.csv', '460000095074424637.csv', '460000095074465569.csv', '460000095074467156.csv', '460000095074476402.csv', '460000095079109575.csv', '460000095080923032.csv', '460000095080958864.csv', '460000095080968055.csv', '460000095083402469.csv', '460000095083457844.csv', '460000095083470449.csv', '460000095083499334.csv', '460000095083818745.csv', '460000095084416880.csv', '460000095084420542.csv', '460000095084437788.csv', '460000095084486097.csv', '460000095084492531.csv', '460000095084494779.csv', '460000095084995924.csv', '460000095090129828.csv', '460000095090191628.csv', '460000095090758498.csv', '460000095091180583.csv', '460000095093417729.csv', '460000095093938695.csv', '460020095000526731.csv', '460020095000586650.csv', '460020095000636300.csv', '460020095000646396.csv', '460020095001192336.csv', '460020095001645387.csv', '460020095001775162.csv', '460020095002685457.csv', '460020095002693054.csv', '460020095002752094.csv', '460020095002765063.csv', '460020095003040400.csv', '460020095003693826.csv', '460020095004258157.csv', '460020095004730821.csv', '460020095004751842.csv', '460020095006349317.csv', '460020095009127182.csv', '460020095009713959.csv', '460020095013629082.csv', '460020095019213379.csv', '460020095019361156.csv', '460020095020693878.csv', '460020095020826206.csv', '460020095021709464.csv', '460020095024525542.csv', '460020095024652194.csv', '460020095025511997.csv', '460020095025588848.csv', '460020095025609903.csv', '460020095025669655.csv', '460020095025808757.csv', '460020095026670626.csv', '460020095027690570.csv', '460020095029764850.csv', '460020095033733585.csv', '460020095040329737.csv', '460020095040371174.csv', '460020095040671966.csv', '460020095040749610.csv', '460020095042630820.csv', '460020095044852955.csv', '460020095047591881.csv', '460020095050670159.csv', '460020095051970226.csv', '460020095053216865.csv', '460020095068332375.csv', '460020095081880808.csv', '460020095088859075.csv', '460020095098336977.csv', '460020095098364762.csv', '460020095098800085.csv', '460070095005469544.csv', '460070095006117569.csv', '460070095021168998.csv', '460070095024575626.csv', '460070095024644511.csv', '460070095024650259.csv', '460070095025648611.csv', '460070095025649502.csv', '460070095040136238.csv', '460070095040239953.csv', '460070095048036852.csv', '460070095098504016.csv', '460070095098545714.csv']
-
-    var color = ['red', 'blue', 'yellow', 'green', 'white', 'purple', 'black', 'grey', '#00CED1', '#DC143C', '#378CDD', '#1E1E1E'];
-
-    function setData() {
-        var map = new AMap.Map('container', {
-            mapStyle: 'amap://styles/1de318cbb8d12c02303a22c550b9ccc9',
-            zoom: 10,
-            center: [123.2531, 41.8011],
-            features: ['bg', 'road'],
-            eventSupport: true,  // 图层事件支持，LabelsLayer 默认开启
-            fitView: true,
-            visible: true,
-            zIndex: 99,
-            collision: false  // 是否开启文字自动避让
-        });
-        $.get("cluster/" + fileList[index], function (data) {
-            // 点图层
-            pointLayer = new Loca.PointLayer({
-                map: map
-            });
-
-            pointLayer.setData(data, {
-                lnglat: function (obj) {
-                    var value = obj.value;
-                    var lnglat = [value['longitude'], value['latitude']];
-                    console.log(lnglat, new Date().getMilliseconds(), obj.index, value['timestamp']);
-                    return lnglat;
-                },
-                type: 'csv'
-            }).setOptions({
-                style: {
-                    // 圆形半径，单位像素
-                    radius: 6,
-                    // 填充颜色
-                    color: function (data) {
-                        var value = data.value;
-                        // "index" + value[indexedDB] +
-                        return color[value['cluster'] - 1]
-                    },
-                    // 描边颜色
-                    borderColor: '#FF0000',
-                    // 描边宽度，单位像素
-                    borderWidth: 1,
-                    // 透明度 [0-1]
-                    opacity: 1,
-                }
-            }).render();
-
-            // 文字标记图层
-            labelsLayer = new Loca.LabelsLayer({
-                zooms: [3, 20],
-                zIndex: 1000,
-                // 开启标注避让，默认为开启，v1.4.15 新增属性
-                collision: true,
-                // 开启标注淡入动画，默认为开启，v1.4.15 新增属性
-                // animation: true,
-                map: map,
-            });
-
-            labelsLayer.setData(data, {
-                lnglat: function (obj) {
-                    var value = obj.value;
-                    var lnglat = [value['longitude'], value['latitude']];
-                    return lnglat;
-                },
-                type: 'csv'
-            }).setOptions({
-                style: {
-                    direction: "top",  // 文字位置
-                    offset: [0, 0],  // 文字偏移距离
-                    zooms: [3, 18],  // 文字显示范围
-                    text: function (data) {
-                        var value = data.value;
-                        // "index" + value[indexedDB] +
-                        return value['timestamp'] + " cluster" + value['cluster']
-                    },  // 文本内容
-                    // fillColor: function () {
-                    //     return `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`
-                    // },  // 文字填充色
-                    // fontFamily: '字体',  // 文字字体(2D)
-                    // fontSize: 30,  // 文字大小, 默认值：12
-                    fontWeight: "normal",  // 文字粗细(2D)。 可选值： 'normal'| 'lighter'| 'bold' 。默认值：'normal'
-                    strokeColor: "rgba(255,255,255,0.85)",  // 文字描边颜色
-                    strokeWidth: 1,  // 文字描边宽度
-                }
-            }).render();
-
-            var pathArray = data.split("\n");
-            var path = [];
-            for (var i = 1; i < pathArray.length - 1; i++) {
-                var content = pathArray[i].split(",");
-                path.push([parseFloat(content[2]), parseFloat(content[3])]);
+        var index = 0;
+        var pointLayer;
+        var labelsLayer;
+        $(".previous").click(function () {
+            if (index > 0) {
+                index--;
+                $(".title").text(user_ids[index]);
+                setData();
             }
-            var polyline = new AMap.Polyline({
-                path: path,
-                borderWeight: 1, // 线条宽度，默认为 1
-                strokeWeight: 6,
-                strokeOpacity: 1,
-                strokeColor: 'red',
-                zIndex: 1000,
-                showDir: true
-            });
-            map.add(polyline);
+            console.log(index)
         });
-    }
+        $(".next").click(function () {
+            if (index < user_ids.length) {
+                index++;
+                setData();
+                $(".title").text(user_ids[index]);
+            }
+            console.log(index)
+        });
 
-    setData();
-    $(".title").text(fileList[index]);
+        var fileList = ['460000095005561145.csv', '460000095005565778.csv', '460000095005571676.csv', '460000095007329090.csv', '460000095007687263.csv', '460000095009768355.csv', '460000095009824436.csv', '460000095018240151.csv', '460000095028482910.csv', '460000095040541608.csv', '460000095040591270.csv', '460000095057074060.csv', '460000095060523239.csv', '460000095062189004.csv', '460000095062225863.csv', '460000095063856923.csv', '460000095063881983.csv', '460000095063979850.csv', '460000095064919090.csv', '460000095064990351.csv', '460000095071779102.csv', '460000095073912558.csv', '460000095074423059.csv', '460000095074424637.csv', '460000095074465569.csv', '460000095074467156.csv', '460000095074476402.csv', '460000095079109575.csv', '460000095080923032.csv', '460000095080958864.csv', '460000095080968055.csv', '460000095083402469.csv', '460000095083457844.csv', '460000095083470449.csv', '460000095083499334.csv', '460000095083818745.csv', '460000095084416880.csv', '460000095084420542.csv', '460000095084437788.csv', '460000095084486097.csv', '460000095084492531.csv', '460000095084494779.csv', '460000095084995924.csv', '460000095090129828.csv', '460000095090191628.csv', '460000095090758498.csv', '460000095091180583.csv', '460000095093417729.csv', '460000095093938695.csv', '460020095000526731.csv', '460020095000586650.csv', '460020095000636300.csv', '460020095000646396.csv', '460020095001192336.csv', '460020095001645387.csv', '460020095001775162.csv', '460020095002685457.csv', '460020095002693054.csv', '460020095002752094.csv', '460020095002765063.csv', '460020095003040400.csv', '460020095003693826.csv', '460020095004258157.csv', '460020095004730821.csv', '460020095004751842.csv', '460020095006349317.csv', '460020095009127182.csv', '460020095009713959.csv', '460020095013629082.csv', '460020095019213379.csv', '460020095019361156.csv', '460020095020693878.csv', '460020095020826206.csv', '460020095021709464.csv', '460020095024525542.csv', '460020095024652194.csv', '460020095025511997.csv', '460020095025588848.csv', '460020095025609903.csv', '460020095025669655.csv', '460020095025808757.csv', '460020095026670626.csv', '460020095027690570.csv', '460020095029764850.csv', '460020095033733585.csv', '460020095040329737.csv', '460020095040371174.csv', '460020095040671966.csv', '460020095040749610.csv', '460020095042630820.csv', '460020095044852955.csv', '460020095047591881.csv', '460020095050670159.csv', '460020095051970226.csv', '460020095053216865.csv', '460020095068332375.csv', '460020095081880808.csv', '460020095088859075.csv', '460020095098336977.csv', '460020095098364762.csv', '460020095098800085.csv', '460070095005469544.csv', '460070095006117569.csv', '460070095021168998.csv', '460070095024575626.csv', '460070095024644511.csv', '460070095024650259.csv', '460070095025648611.csv', '460070095025649502.csv', '460070095040136238.csv', '460070095040239953.csv', '460070095048036852.csv', '460070095098504016.csv', '460070095098545714.csv']
 
+        var color = ['red', 'blue', 'yellow', 'green', 'white', 'purple', 'black', 'grey', '#00CED1', '#DC143C', '#378CDD', '#1E1E1E'];
 
+        function setData() {
+            var map = new AMap.Map('container', {
+                mapStyle: 'amap://styles/1de318cbb8d12c02303a22c550b9ccc9',
+                zoom: 13,
+                center: [123.4231, 41.8011],
+                features: ['bg', 'road'],
+                eventSupport: true,  // 图层事件支持，LabelsLayer 默认开启
+                fitView: true,
+                visible: true,
+                zIndex: 99,
+                collision: false  // 是否开启文字自动避让
+            });
+            console.log(user_ids[index])
+            $.get("/way/getTrackWay1?userId=" + user_ids[index] + "&startTime=" + "1538457896159", function (track_way_response) {
+                console.log(track_way_response.data)
+                let track_way_detail = track_way_response.data
+                // 点图层
+                pointLayer = new Loca.PointLayer({
+                    map: map
+                });
+
+                pointLayer.setData(track_way_detail, {
+                    lnglat: function (obj) {
+                        var value = obj.value;
+                        var lnglat = [value['longitude'], value['latitude']];
+                        console.log(lnglat, new Date().getMilliseconds(), obj.index, value['timestamp']);
+                        return lnglat;
+                    },
+                    // type: 'csv'
+                }).setOptions({
+                    style: {
+                        // 圆形半径，单位像素
+                        radius: 6,
+                        // 填充颜色
+                        color: function (data) {
+                            var value = data.value;
+                            // "index" + value[indexedDB] +
+                            return color[value['cluster'] - 1]
+                        },
+                        // 描边颜色
+                        borderColor: '#FF0000',
+                        // 描边宽度，单位像素
+                        borderWidth: 1,
+                        // 透明度 [0-1]
+                        opacity: 1,
+                    }
+                }).render();
+
+                // 文字标记图层
+                labelsLayer = new Loca.LabelsLayer({
+                    zooms: [3, 20],
+                    zIndex: 1000,
+                    // 开启标注避让，默认为开启，v1.4.15 新增属性
+                    collision: true,
+                    // 开启标注淡入动画，默认为开启，v1.4.15 新增属性
+                    // animation: true,
+                    map: map,
+                });
+
+                labelsLayer.setData(track_way_detail, {
+                    lnglat: function (obj) {
+                        var value = obj.value;
+                        var lnglat = [value['longitude'], value['latitude']];
+                        return lnglat;
+                    },
+                    // type: 'csv'
+                }).setOptions({
+                    style: {
+                        direction: "top",  // 文字位置
+                        offset: [0, 0],  // 文字偏移距离
+                        zooms: [3, 18],  // 文字显示范围
+                        text: function (data) {
+                            var value = data.value;
+                            // "index" + value[indexedDB] +
+                            return value['timestamp'] + " cluster" + value['cluster']
+                        },  // 文本内容
+                        // fillColor: function () {
+                        //     return `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`
+                        // },  // 文字填充色
+                        // fontFamily: '字体',  // 文字字体(2D)
+                        // fontSize: 30,  // 文字大小, 默认值：12
+                        fontWeight: "normal",  // 文字粗细(2D)。 可选值： 'normal'| 'lighter'| 'bold' 。默认值：'normal'
+                        strokeColor: "rgba(255,255,255,0.85)",  // 文字描边颜色
+                        strokeWidth: 1,  // 文字描边宽度
+                    }
+                }).render();
+
+                // var pathArray = track_way_response.split("\n");
+                // var path = [];
+                // for (var i = 1; i < pathArray.length - 1; i++) {
+                //     var content = pathArray[i].split(",");
+                //     path.push([parseFloat(content[2]), parseFloat(content[3])]);
+                // }
+                let path = [];
+                for (let i = 0; i < track_way_detail.length -1; i++) {
+                    let content = track_way_detail[i]
+                    path.push([parseFloat(content.longitude), parseFloat(content.latitude)])
+                }
+                var polyline = new AMap.Polyline({
+                    path: path,
+                    borderWeight: 1, // 线条宽度，默认为 1
+                    strokeWeight: 6,
+                    strokeOpacity: 1,
+                    strokeColor: 'red',
+                    zIndex: 1000,
+                    showDir: true
+                });
+                map.add(polyline);
+            });
+        }
+
+        setData();
+        $(".title").text(user_ids[index]);
+
+    })
 </script>
 </body>
 </html>
