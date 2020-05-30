@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:v-bind="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8">
     <title>出行OD矩阵</title>
@@ -31,7 +31,7 @@
             background-color: #1f243a;
         }
 
-        .map{
+        .map,.map-right{
             border:1px solid black;
 
         }
@@ -47,7 +47,7 @@
             border-radius: 10px 0 0 10px;
         }
 
-        .intro{
+        .intro,.map-right{
             border-radius: 0 10px  10px 0;
         }
 
@@ -59,18 +59,35 @@
         <h2 data-scroll-reveal="enter top">小区划分</h2>
         <div class="row" >
             <div class="col-md-8 map" style="height: 500px" data-scroll-reveal="enter left after 0.5s">
-                小区地图
+
             </div>
             <div class="col-md-4 intro card direct-chat direct-chat-warning" style="height: 500px" data-scroll-reveal="enter right after 0.5s">
-                <div class="card-body" style="height: 100%">
-
-                    card body
+                <div class="card-body">
+                    <ul class="products-list product-list-in-card pl-2 pr-2">
+                        <li v-for="zone in zoneCenter" v-bind:key="zone.zone" class="item">
+                            <div class="row">
+                                <label  class="col-sm-12 col-form-label text-center">小区{{zone.zone}}</label>
+                            </div>
+                            <div class="row">
+                                <b  class="col-sm-4 col-form-label text-center">经度</b>
+                                <div class="col-sm-8 col-form-label ">{{zone.longitude}}</div>
+                            </div>
+                            <div class="row">
+                                <b  class="col-sm-4 col-form-label text-center">纬度</b>
+                                <div class="col-sm-8 col-form-label">{{zone.latitude}}</div>
+                            </div>
+                            <div class="row">
+                                <b  class="col-sm-4 col-form-label text-center">地址</b>
+                                <div class="col-sm-8 col-form-label">{{zone.address}}</div>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
     <div class="block2">
-        <h2 data-scroll-reveal="enter top " style="padding-top: 50px;color: whitesmoke">各小区人口流入流出量详情</h2>
+        <h2 data-scroll-reveal="enter top " style="padding-top: 50px;color: whitesmoke">小区人口流入流出量一日概览</h2>
         <div style="width: 250px;margin: auto" data-scroll-reveal="enter bottom over 1s and move 100px">
             <select id="zoneSelect" class="form-control select2" >
                 <option value="0" selected="selected">小区0</option>
@@ -80,8 +97,27 @@
             <div id="main" style="width: 100%;height:400px;"></div>
         </div>
     </div>
-    <div class="block1">
-        小区吸引关系表
+    <div class="block1" style="height: 850px">
+        <h2 data-scroll-reveal="enter top " style="padding-top: 50px;">小区发生/吸引量详情图</h2>
+        <div style="width: 250px;margin: auto" data-scroll-reveal="enter bottom over 1s and move 100px">
+            <select id="zoneFlow" class="form-control select2" >
+                <option value="0" selected="selected">小区0</option>
+            </select>
+        </div>
+        <div class="row" >
+            <div class="col-md-6"  data-scroll-reveal="enter top after 0.3s">
+                <label style="width:100%;margin: 30px auto;text-align: center">小区交通吸引量</label>
+            </div>
+            <div class="col-md-6" data-scroll-reveal="enter bottom after 0.3s">
+                <label style="width:100%;margin: 30px auto;text-align: center">小区交通发生量</label>
+            </div>
+        </div>
+        <div class="row" >
+            <div class="col-md-6 map" style="height: 500px" data-scroll-reveal="enter left after 0.5s">
+            </div>
+            <div class="col-md-6 map-right" style="height: 500px" data-scroll-reveal="enter right after 0.5s">
+            </div>
+        </div>
     </div>
 
 
@@ -94,17 +130,64 @@
         currentIndex: -1,
     };
 
-
-
-
-    var app = new Vue({
+    var app1 = new Vue({
         el: '#all',
         data() {
             return{
+                zoneCenter:[],
+                zoneCenterTemp:[],
 
             }
         },
         methods:{
+            getZoneDetail(){
+                let that = this;
+                $.ajax({
+                    type:"GET",
+                    url:"/stay/getZoneCenter",
+                    data:{
+                    },
+                    dataType:"json",
+                    success:function(res){
+                        // console.log(res);
+                        // var zoneList=[]
+                        res.data.forEach((x,i) => {
+                            $.ajax({
+                                type:"GET",
+                                url:"https://restapi.amap.com/v3/geocode/regeo?key=f78f8d954cb41a2d3b84e05e46f552c4&location="+x.longitude+","+x.latitude+"&poitype=&radius=&extensions=base&batch=false&roadlevel=",
+                                data:{
+                                },
+                                dataType:"json",
+                                success:function(res){
+                                    // console.log(res);
+                                    // console.log(res.regeocode.formatted_address)
+                                    let data = {
+                                        "zone":x.zone,
+                                        "longitude":x.longitude,
+                                        "latitude":x.latitude,
+                                        "address":res.regeocode.formatted_address
+                                    }
+                                    // zoneList.push(data)
+                                    // console.log(data)
+                                    that.zoneCenterTemp.push(data)
+                                },
+                                error:function(res){
+                                    // alert("请求的页面有错误");
+                                }
+                            });
+                        })
+                        // that.zoneData = zoneList;
+
+                        that.zoneCenterTemp.sort((x1,x2)=>x1.zone - x2.zone);
+                        // console.log(88888888888)
+                        that.zoneCenter = that.zoneCenterTemp;
+                        // that.zoneCenter.forEach(x=>console.log(x))
+                    },
+                    error:function(res){
+                        // alert("请求的页面有错误");
+                    }
+                });
+            },
             selectZone(){
                 let that = this;
                 var zoneselect = $("#zoneSelect").select2({
@@ -156,6 +239,60 @@
                     console.log(e.params.data.id);
                     console.log("change zone")
                     that.zoneData(e.params.data.id)
+                })
+                // zoneselect.val(0).trigger("change");
+            },
+            zoneFlow(){
+                let that = this;
+                var zoneFlow = $("#zoneFlow").select2({
+                    theme: 'bootstrap4',
+                    ajax: {
+                        delay: 500,
+                        type: 'post',
+                        url: '/stay/getZoneCenter',
+                        data: function (params) {
+                            return {
+                                key: params.term
+                            };
+                        },
+                        processResults: function (data, params) {
+                            console.log(data)
+                            if(data.code === "200") {
+                                var zones = data.data;
+                                var list = [];
+                                zones.forEach(function (zone) {
+                                    var option = {
+                                        id: "",
+                                        text: "",
+                                    };
+                                    option.id = zone.zone;
+                                    option.text = "小区"+zone.zone;
+                                    list.push(option);
+                                });
+                                return {
+                                    results: list
+                                }
+                            }
+                            return {
+                                results: []
+                            };
+                        },
+                        cache: true
+                    },
+                    language: {
+                        noResults: function (params) {
+                            return "没有找到，小区号"
+                        },
+                        searching: function () {
+                            return '搜索中...';
+                        }
+                    }
+                });
+                zoneFlow.on("select2:select",function(e){
+                    // e 的话就是一个对象 然后需要什么就 “e.参数” 形式 进行获取
+                    console.log(e.params.data.id);
+                    console.log("change zoneFlow！")
+                    // that.zoneData(e.params.data.id)
                 })
                 // zoneselect.val(0).trigger("change");
             },
@@ -336,50 +473,19 @@
             }
         },
         created(){
-
+            this.getZoneDetail();
         },
         mounted(){
             window.scrollReveal = new scrollReveal({ reset: true, move: '50px'});
             this.zoneData(0);
             this.selectZone();
+            this.zoneFlow();
+
         },
         watch: {
 
         }
     });
-    // 基于准备好的dom，初始化echarts实例
-
-    // 立体柱状图
-
-
-
-
-
-
-//     $.ajax({
-//         type:"GET",
-//         url:"/stay/getOd",
-//         data:{
-//             startTime : "9:00",
-//             endTime : "10:00"
-//         },
-//         dataType:"json",
-//         success:function(res){
-//             console.log(res);
-//             if(res.resultCode=="200"){
-//                 //查找成功
-//                 console()
-//             } else {
-//                 //查找失败，没有该条记录
-//                 // alert("查找失败")
-//             }
-//             console.log("加载了echarts")
-// // 				$("#dataTables-example").dataTable();
-//         },
-//         error:function(res){
-//             // alert("请求的页面有错误");
-//         }
-//     });
 </script>
 </body>
 </html>
