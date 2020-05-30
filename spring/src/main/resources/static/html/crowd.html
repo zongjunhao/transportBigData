@@ -24,11 +24,12 @@
 <!--<script src="/vendor/jquery/jquery.min.js"></script>-->
 <script>
     let result_data
+    let start_time = "1538457896159"
     $.ajax({
         type: 'get',
         url: '/crowd/getCrowdCount1',
         data: {
-            startTime: "1538457896159"
+            startTime: start_time
         },
         dataType: "json",
         success: function (res) {
@@ -40,12 +41,13 @@
             }
         }
     })
+
     // draw_map("")
     function draw_map(data) {
-        data = [{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79013824,"count":1.0,"cellId":"67446797","longitude":123.3956909},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.42948151,"count":1.0,"cellId":"11884686","longitude":123.3410721},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.82408905,"count":1.0,"cellId":"61409155","longitude":124.0002823},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.78144836,"count":1.0,"cellId":"67455283","longitude":123.4209595},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.81045914,"count":1.0,"cellId":"2614540","longitude":123.411911},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79272079,"count":1.0,"cellId":"67444532","longitude":123.4003677},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.93780136,"count":1.0,"cellId":"68133408","longitude":123.3345413},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80072021,"count":1.0,"cellId":"68078869","longitude":123.4279633},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79399109,"count":1.0,"cellId":"61396356","longitude":123.4078903},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80054855,"count":1.0,"cellId":"67577867","longitude":123.4267578},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.58811188,"count":1.0,"cellId":"67737653","longitude":123.560173},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80329132,"count":1.0,"cellId":"235008533","longitude":123.4697189},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.65663147,"count":1.0,"cellId":"67927613","longitude":123.3987732},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.52082062,"count":1.0,"cellId":"67924511","longitude":122.6752625},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.76622009,"count":1.0,"cellId":"12586371","longitude":123.1857224},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.82310104,"count":1.0,"cellId":"67229247","longitude":123.517189},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.77341843,"count":1.0,"cellId":"67428661","longitude":123.4338303},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.78939819,"count":1.0,"cellId":"67447564","longitude":123.3982468},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80054855,"count":1.0,"cellId":"67577917","longitude":123.4267578},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79851151,"count":1.0,"cellId":"67440397","longitude":123.4061203},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.8078804,"count":1.0,"cellId":"67569931","longitude":123.4119873},{"dayHour":1538457896159,"isAbnormal":0,"latitude":42.1137619,"count":1.0,"cellId":"67938572","longitude":122.65802},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.81689835,"count":1.0,"cellId":"249675788","longitude":123.4136581},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.85372162,"count":1.0,"cellId":"67669260","longitude":123.4176178},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.8102417,"count":1.0,"cellId":"67291403","longitude":123.4166718},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.69551086,"count":1.0,"cellId":"234912524","longitude":123.1545181},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.83444977,"count":1.0,"cellId":"60010381","longitude":123.4266891}]
+        // data = [{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79013824,"count":1.0,"cellId":"67446797","longitude":123.3956909},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.42948151,"count":1.0,"cellId":"11884686","longitude":123.3410721},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.82408905,"count":1.0,"cellId":"61409155","longitude":124.0002823},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.78144836,"count":1.0,"cellId":"67455283","longitude":123.4209595},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.81045914,"count":1.0,"cellId":"2614540","longitude":123.411911},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79272079,"count":1.0,"cellId":"67444532","longitude":123.4003677},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.93780136,"count":1.0,"cellId":"68133408","longitude":123.3345413},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80072021,"count":1.0,"cellId":"68078869","longitude":123.4279633},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79399109,"count":1.0,"cellId":"61396356","longitude":123.4078903},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80054855,"count":1.0,"cellId":"67577867","longitude":123.4267578},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.58811188,"count":1.0,"cellId":"67737653","longitude":123.560173},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80329132,"count":1.0,"cellId":"235008533","longitude":123.4697189},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.65663147,"count":1.0,"cellId":"67927613","longitude":123.3987732},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.52082062,"count":1.0,"cellId":"67924511","longitude":122.6752625},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.76622009,"count":1.0,"cellId":"12586371","longitude":123.1857224},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.82310104,"count":1.0,"cellId":"67229247","longitude":123.517189},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.77341843,"count":1.0,"cellId":"67428661","longitude":123.4338303},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.78939819,"count":1.0,"cellId":"67447564","longitude":123.3982468},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.80054855,"count":1.0,"cellId":"67577917","longitude":123.4267578},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.79851151,"count":1.0,"cellId":"67440397","longitude":123.4061203},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.8078804,"count":1.0,"cellId":"67569931","longitude":123.4119873},{"dayHour":1538457896159,"isAbnormal":0,"latitude":42.1137619,"count":1.0,"cellId":"67938572","longitude":122.65802},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.81689835,"count":1.0,"cellId":"249675788","longitude":123.4136581},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.85372162,"count":1.0,"cellId":"67669260","longitude":123.4176178},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.8102417,"count":1.0,"cellId":"67291403","longitude":123.4166718},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.69551086,"count":1.0,"cellId":"234912524","longitude":123.1545181},{"dayHour":1538457896159,"isAbnormal":0,"latitude":41.83444977,"count":1.0,"cellId":"60010381","longitude":123.4266891}]
         console.log("result_data", data)
         var map = new AMap.Map('container', {
-            mapStyle: 'amap://styles/1de318cbb8d12c02303a22c550b9ccc9',
+            mapStyle: 'amap://styles/whitesmoke',
             zoom: 13,
             center: [123.4231, 41.8011],
             features: ['bg', 'road'],
@@ -91,6 +93,22 @@
         });
 
         layer.render();
+        map.setFitView()
+
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].isAbnormal === 1) {
+                // 创建一个 Marker 实例：
+                var marker = new AMap.Marker({
+                    position: new AMap.LngLat(parseFloat(data[i].longitude), parseFloat(data[i].latitude)),   // 经纬度对象，也可以是经纬度构成的一维数组[116.39, 39.9]
+                    title: '异常'
+                });
+
+                // 将创建的点标记添加到已有的地图实例：
+                map.add(marker);
+            }
+        }
+
+
     }
 </script>
 </body>

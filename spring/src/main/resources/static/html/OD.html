@@ -13,6 +13,10 @@
     <link rel="stylesheet" href="/plugins/select2/css/select2.min.css">
     <link rel="stylesheet" href="/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
     <script src="../plugins/select2/js/select2.full.min.js"></script>
+<!--    <script src="//a.amap.com/Loca/static/dist/jquery.min.js"></script>-->
+    <script src="https://webapi.amap.com/maps?v=1.4.15&key=572552fe424d121536dd050c1adff15d"></script>
+    <script src="//webapi.amap.com/loca?v=1.3.2&key=572552fe424d121536dd050c1adff15d"></script>
+    <script src="../js/OD.js"></script>
     <style>
         html,body,#all{
             width: 100%;
@@ -58,7 +62,7 @@
     <div class="block1">
         <h2 data-scroll-reveal="enter top">小区划分</h2>
         <div class="row" >
-            <div class="col-md-8 map" style="height: 500px" data-scroll-reveal="enter left after 0.5s">
+            <div id="zone-zone" class="col-md-8 map" style="height: 500px" data-scroll-reveal="enter left after 0.5s">
 
             </div>
             <div class="col-md-4 intro card direct-chat direct-chat-warning" style="height: 500px" data-scroll-reveal="enter right after 0.5s">
@@ -113,9 +117,9 @@
             </div>
         </div>
         <div class="row" >
-            <div class="col-md-6 map" style="height: 500px" data-scroll-reveal="enter left after 0.5s">
+            <div id="in-container" class="col-md-6 map" style="height: 500px" data-scroll-reveal="enter left after 0.5s">
             </div>
-            <div class="col-md-6 map-right" style="height: 500px" data-scroll-reveal="enter right after 0.5s">
+            <div id="out-container" class="col-md-6 map-right" style="height: 500px" data-scroll-reveal="enter right after 0.5s">
             </div>
         </div>
     </div>
@@ -239,6 +243,7 @@
                     console.log(e.params.data.id);
                     console.log("change zone")
                     that.zoneData(e.params.data.id)
+                    draw_inout_map(e.params.data.id)
                 })
                 // zoneselect.val(0).trigger("change");
             },
