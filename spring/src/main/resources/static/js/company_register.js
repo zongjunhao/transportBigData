@@ -40,19 +40,19 @@ function submit(){
         console.log("全部填写")
         $.ajax({
             type : "POST",
-            url : "/KnowledgeLibrary/firm/register",
+            url : "/system/register",
             data : {
-                f_name : $("#corp_name").val(),
-                f_corporation : $("#legal_person_name").val()
+                name : $("#corp_name").val(),
+                password : $("#legal_person_name").val()
             },
             success : function(json) {
-                if (json.resultCode == "8000"){
+                if (json.code == "200"){
                     window.location.href = "login.html";
                 } else {
                     // alert("您所请求的页面有异常");
-                    console.log(json.resultCode)
+                    console.log(json.msg)
                     console.log("状态码错误")
-                    $("#submit_tip").text(json.resultDesc)
+                    $("#submit_tip").text(json.msg)
                 }
             },
             error : function(jqXHR) {
