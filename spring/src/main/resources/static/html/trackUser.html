@@ -129,7 +129,7 @@
                 });
                 console.log(user_ids[index])
                 $.get("/way/getTrackWay1?userId=" + user_ids[index] + "&startTime=" + start_time, function (track_way_response) {
-                    console.log(track_way_response.data)
+                    console.log("tackWay"+track_way_response.data)
                     let track_way_detail = track_way_response.data
                     // 点图层
                     pointLayer = new Loca.PointLayer({
@@ -190,7 +190,7 @@
                             text: function (data) {
                                 var value = data.value;
                                 // "index" + value[indexedDB] +
-                                return value['timestamp'] + " cluster" + value['cluster']
+                                return timestampToTime(value['timestamp'])+"->"+ value['trackWay']//+ " cluster" + value['cluster']
                             },  // 文本内容
                             // fillColor: function () {
                             //     return `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`
@@ -236,6 +236,18 @@
 
     // 入口修改此处时间
     draw_track_map("1538457896159")
+
+    //将时间戳转换成正常时间格式
+    function timestampToTime(timestamp) {
+        var date = new Date(timestamp);//时间戳为10位需*1000，时间戳为13位的话不需乘1000
+        var Y = date.getFullYear() + '-';
+        var M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+        var D = date.getDate() + ' ';
+        var h = date.getHours() + ':';
+        var m = date.getMinutes() + ':';
+        var s = date.getSeconds();
+        return Y+M+D+h+m+s;
+    }
 </script>
 </body>
 </html>
