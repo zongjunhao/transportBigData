@@ -2,97 +2,120 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>主页</title>
-    <link rel="stylesheet" href="/dist/css/adminlte.min.css">
-    <script src="/js/echarts/echarts.min.js"></script>
-    <script src="/vendor/jquery/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="/js/scrollReveal.js"></script>
-    <script src="/dist/js/adminlte.min.js"></script><!-- AdminLTE App -->
-    <script src="../plugins/select2/js/select2.full.min.js"></script>
-    <link rel="stylesheet" href="/js/font-awesome.min.css">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css"/>
     <style>
-        .info{
-            height: 400px;
-            margin: 30px;
-
-        }
-
-        h1 {
-            margin: 60px auto;
-            font-size: 55px;
-            font-weight: bold;
-            /*color: #fdf5f2;*/
-            text-align: center;
-        }
-        h2 {
-            margin: 20px 0;
-            font-size: 35px;
-            font-weight: bold;
-            /*color: #fdf5f2;*/
-            text-align: center;
+        html,
+        body,
+        #container {
+            height: 100%;
+            width: 100%;
+            margin: 0;
         }
     </style>
 </head>
 <body>
-<div>
-    <h1>功能概览</h1>
-    <div class="row" style="margin: 0 100px">
-        <div class="col-md-4 ">
-            <div class="info info-box mb-3">
-                <div class="info-box-content">
-                    <div class="row">
-                        <i class="fa fa-car fa-5x" aria-hidden="true" style="color: #007bff"></i>
-                    </div>
-                    <div class="row">
-                        <h2 class="text-center" style="width: 100%">出行驻留分析</h2>
-                    </div>
-                    <div class="row">
-                        <p>两个部分</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>交通小区划分与小区OD分析</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>选定区域内人流量分析</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 ">
-            <div class="info info-box mb-3">
-                <div class="info-box-content">
-                    <div class="row">
-                        <i class="fa fa-car fa-5x" aria-hidden="true" style="color: #007bff"></i>
-                    </div>
-                    <div class="row">
-                        <h2 class="text-center" style="width: 100%">出行驻留分析</h2>
-                    </div>
-                    <div class="row">
-                        <p>两个部分</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>交通小区划分与小区OD分析</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>选定区域内人流量分析</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 ">
-            <div class="info info-box mb-3">
-                <div class="info-box-content">
-                    <div class="row">
-                        <i class="fa fa-car fa-5x" aria-hidden="true" style="color: #007bff"></i>
-                    </div>
-                    <div class="row">
-                        <h2 class="text-center" style="width: 100%">出行驻留分析</h2>
-                    </div>
-                    <div class="row">
-                        <p>两个部分</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>交通小区划分与小区OD分析</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>选定区域内人流量分析</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div id="container" class="container">
 </div>
-</body>
+<script src="//webapi.amap.com/maps?v=1.4.15&key=572552fe424d121536dd050c1adff15d"></script>
+<script src="//webapi.amap.com/loca?v=1.3.2&key=572552fe424d121536dd050c1adff15d"></script>
+<script src="//a.amap.com/Loca/static/dist/jquery.min.js"></script>
 <script>
+    $.get("http://localhost:8090/stay/getZoneCenter", function (response) {
+        console.log(response.data)
+    })
 
+    var map = new AMap.Map('container', {
+        mapStyle: 'amap://styles/1de318cbb8d12c02303a22c550b9ccc9',
+        zoom: 10,
+        center: [123.2531, 41.8011],
+        features: ['bg', 'road'],
+        eventSupport: true,  // 图层事件支持，LabelsLayer 默认开启
+        fitView: true,
+        visible: true,
+        zIndex: 99,
+        collision: false,  // 是否开启文字自动避让
+        resizeEnable: true
+    });
+
+    $.get('/stay/getZoneCenter', function (data) {
+        // 点图层
+        var pointLayer = new Loca.PointLayer({
+            map: map
+        });
+
+        pointLayer.setData(data.data, {
+            lnglat: function (obj) {
+                var value = obj.value;
+                var lnglat = [value['longitude'], value['latitude']];
+                // console.log(lnglat, new Date().getMilliseconds(), obj.index, value['timestamp'])
+                return lnglat;
+            },
+        }).setOptions({
+            style: {
+                // 圆形半径，单位像素
+                radius: 6,
+                // 填充颜色
+                // color: function (data) {
+                //     var value = data.value;
+                //     // "index" + value[indexedDB] +
+                //     // return color[value['cluster'] - 1]
+                //     let array = value['laci'].split('-');
+                //     let num =  array[0];
+                //     // return `rgb(1${num[2]}0,1${num[3]}0,1${num[4]}0)`
+                //     return `#${num[2]}${num[2]}${num[3]}${num[3]}${num[4]}${num[4]}`
+                // },
+                color: '#FFFFFF',
+
+                // 描边颜色
+                borderColor: '#FF0000',
+                // 描边宽度，单位像素
+                borderWidth: 1,
+                // 透明度 [0-1]
+                opacity: 1,
+            }
+        }).render();
+
+        // 文字标记图层
+        var labelsLayer = new Loca.LabelsLayer({
+            zooms: [3, 20],
+            zIndex: 1000,
+            // 开启标注避让，默认为开启，v1.4.15 新增属性
+            collision: true,
+            // 开启标注淡入动画，默认为开启，v1.4.15 新增属性
+            // animation: true,
+            map: map,
+        });
+
+        labelsLayer.setData(data.data, {
+            lnglat: function (obj) {
+                var value = obj.value;
+                var lnglat = [value['longitude'], value['latitude']];
+                return lnglat;
+            },
+        }).setOptions({
+            style: {
+                direction: "top",  // 文字位置
+                offset: [0, 0],  // 文字偏移距离
+                zooms: [3, 18],  // 文字显示范围
+                text: function (data) {
+                    var value = data.value;
+                    // "index" + value[indexedDB] +
+                    // return value['timestamp'] + " cluster" + value['cluster']
+                    return value['zone']
+                },  // 文本内容
+                // fillColor: function () {
+                //     return `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`
+                // },  // 文字填充色
+                // fontFamily: '字体',  // 文字字体(2D)
+                // fontSize: 30,  // 文字大小, 默认值：12
+                fontWeight: "normal",  // 文字粗细(2D)。 可选值： 'normal'| 'lighter'| 'bold' 。默认值：'normal'
+                strokeColor: "rgba(255,255,255,0.85)",  // 文字描边颜色
+                strokeWidth: 1,  // 文字描边宽度
+            }
+        }).render();
+
+    });
 </script>
+</body>
 </html>

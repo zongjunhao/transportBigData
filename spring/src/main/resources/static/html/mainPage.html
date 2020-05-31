@@ -2,17 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-<<<<<<< Updated upstream
-    <title>Title</title>
-    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css"/>
-    <style>
-        html,
-        body,
-        #container {
-            height: 100%;
-            width: 100%;
-            margin: 0;
-=======
     <title>主页</title>
     <link rel="stylesheet" href="/dist/css/adminlte.min.css">
     <script src="/js/echarts/echarts.min.js"></script>
@@ -42,115 +31,10 @@
             font-weight: bold;
             /*color: #fdf5f2;*/
             text-align: center;
->>>>>>> Stashed changes
         }
     </style>
 </head>
 <body>
-<<<<<<< Updated upstream
-<div id="container" class="container">
-</div>
-<script src="//webapi.amap.com/maps?v=1.4.15&key=572552fe424d121536dd050c1adff15d"></script>
-<script src="//webapi.amap.com/loca?v=1.3.2&key=572552fe424d121536dd050c1adff15d"></script>
-<script src="//a.amap.com/Loca/static/dist/jquery.min.js"></script>
-<script>
-    $.get("http://localhost:8090/stay/getZoneCenter", function (response) {
-        console.log(response.data)
-    })
-
-    var map = new AMap.Map('container', {
-        mapStyle: 'amap://styles/1de318cbb8d12c02303a22c550b9ccc9',
-        zoom: 10,
-        center: [123.2531, 41.8011],
-        features: ['bg', 'road'],
-        eventSupport: true,  // 图层事件支持，LabelsLayer 默认开启
-        fitView: true,
-        visible: true,
-        zIndex: 99,
-        collision: false,  // 是否开启文字自动避让
-        resizeEnable: true
-    });
-
-    $.get('/stay/getZoneCenter', function (data) {
-        // 点图层
-        var pointLayer = new Loca.PointLayer({
-            map: map
-        });
-
-        pointLayer.setData(data.data, {
-            lnglat: function (obj) {
-                var value = obj.value;
-                var lnglat = [value['longitude'], value['latitude']];
-                // console.log(lnglat, new Date().getMilliseconds(), obj.index, value['timestamp'])
-                return lnglat;
-            },
-        }).setOptions({
-            style: {
-                // 圆形半径，单位像素
-                radius: 6,
-                // 填充颜色
-                // color: function (data) {
-                //     var value = data.value;
-                //     // "index" + value[indexedDB] +
-                //     // return color[value['cluster'] - 1]
-                //     let array = value['laci'].split('-');
-                //     let num =  array[0];
-                //     // return `rgb(1${num[2]}0,1${num[3]}0,1${num[4]}0)`
-                //     return `#${num[2]}${num[2]}${num[3]}${num[3]}${num[4]}${num[4]}`
-                // },
-                color: '#FFFFFF',
-
-                // 描边颜色
-                borderColor: '#FF0000',
-                // 描边宽度，单位像素
-                borderWidth: 1,
-                // 透明度 [0-1]
-                opacity: 1,
-            }
-        }).render();
-
-        // 文字标记图层
-        var labelsLayer = new Loca.LabelsLayer({
-            zooms: [3, 20],
-            zIndex: 1000,
-            // 开启标注避让，默认为开启，v1.4.15 新增属性
-            collision: true,
-            // 开启标注淡入动画，默认为开启，v1.4.15 新增属性
-            // animation: true,
-            map: map,
-        });
-
-        labelsLayer.setData(data.data, {
-            lnglat: function (obj) {
-                var value = obj.value;
-                var lnglat = [value['longitude'], value['latitude']];
-                return lnglat;
-            },
-        }).setOptions({
-            style: {
-                direction: "top",  // 文字位置
-                offset: [0, 0],  // 文字偏移距离
-                zooms: [3, 18],  // 文字显示范围
-                text: function (data) {
-                    var value = data.value;
-                    // "index" + value[indexedDB] +
-                    // return value['timestamp'] + " cluster" + value['cluster']
-                    return value['zone']
-                },  // 文本内容
-                // fillColor: function () {
-                //     return `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`
-                // },  // 文字填充色
-                // fontFamily: '字体',  // 文字字体(2D)
-                // fontSize: 30,  // 文字大小, 默认值：12
-                fontWeight: "normal",  // 文字粗细(2D)。 可选值： 'normal'| 'lighter'| 'bold' 。默认值：'normal'
-                strokeColor: "rgba(255,255,255,0.85)",  // 文字描边颜色
-                strokeWidth: 1,  // 文字描边宽度
-            }
-        }).render();
-
-    });
-</script>
-=======
 <div>
     <h1>功能概览</h1>
     <div class="row" style="margin: 0 100px">
@@ -207,7 +91,6 @@
         </div>
     </div>
 </div>
->>>>>>> Stashed changes
 </body>
 <script>
 
