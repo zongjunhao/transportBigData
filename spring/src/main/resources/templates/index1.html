@@ -36,7 +36,7 @@
                 <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
             </li>
             <li class="nav-item d-none d-sm-inline-block">
-                <a href="courseList.html" class="nav-link">主页</a>
+                <a href="/html/mainPage.html" target="main" class="nav-link">主页</a>
             </li>
         </ul>
         <!-- Right navbar links -->
@@ -44,7 +44,7 @@
             <li class="nav-item  nav-sidebar">
                 <a class="nav-link" data-toggle="dropdown" href="#">
                     <i class="nav-icon fas fa-user"></i>
-                    <p>{{userName}}</p>
+                    <p></p>
                 </a>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                     <button class="dropdown-item" data-toggle="modal" data-target=".myModal">
@@ -69,43 +69,43 @@
         </ul>
     </nav>
 
-    <div class="modal fade myModal1" tabindex="-1" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
+<!--    <div class="modal fade myModal1" tabindex="-1" role="dialog">-->
+<!--        <div class="modal-dialog">-->
+<!--            <div class="modal-content">-->
 
-                <div class="modal-header">
-                    <h4 class="modal-title">修改密码</h4>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
+<!--                <div class="modal-header">-->
+<!--                    <h4 class="modal-title">修改密码</h4>-->
+<!--                    <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+<!--                </div>-->
 
-                <div class="modal-body">
-                    <div>
-                        <div class="form-group">
-                            <label for="old_password">旧密码</label>
-                            <input type="password" class="form-control" :class="{'is-invalid': !is_old_valid}"
-                                   id="old_password" placeholder="输入旧密码" required v-model="original_password">
-                        </div>
-                        <div class="form-group">
-                            <label for="new_password">新密码</label>
-                            <input type="password" class="form-control" :class="{'is-invalid': !is_password_valid}"
-                                   id="new_password" placeholder="输入新密码" required v-model="password">
-                        </div>
-                        <div class="form-group">
-                            <label for="retype_password">确认新密码</label>
-                            <input type="password" class="form-control" :class="{'is-invalid': !is_retype_valid}"
-                                   id="retype_password" placeholder="确认新密码" required v-model="retype_password">
-                        </div>
-                    </div>
-                </div>
+<!--                <div class="modal-body">-->
+<!--                    <div>-->
+<!--                        <div class="form-group">-->
+<!--                            <label for="old_password">旧密码</label>-->
+<!--                            <input type="password" class="form-control" :class="{'is-invalid': !is_old_valid}"-->
+<!--                                   id="old_password" placeholder="输入旧密码" required v-model="original_password">-->
+<!--                        </div>-->
+<!--                        <div class="form-group">-->
+<!--                            <label for="new_password">新密码</label>-->
+<!--                            <input type="password" class="form-control" :class="{'is-invalid': !is_password_valid}"-->
+<!--                                   id="new_password" placeholder="输入新密码" required v-model="password">-->
+<!--                        </div>-->
+<!--                        <div class="form-group">-->
+<!--                            <label for="retype_password">确认新密码</label>-->
+<!--                            <input type="password" class="form-control" :class="{'is-invalid': !is_retype_valid}"-->
+<!--                                   id="retype_password" placeholder="确认新密码" required v-model="retype_password">-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
-                    <button type="button" class="btn btn-primary" @click="reset_password()">提交</button>
-                </div>
+<!--                <div class="modal-footer">-->
+<!--                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>-->
+<!--                    <button type="button" class="btn btn-primary" @click="reset_password()">提交</button>-->
+<!--                </div>-->
 
-            </div>
-        </div>
-    </div>
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
 
     <aside class="main-sidebar sidebar-dark-primary elevation-0 sidebar-collapse">
         <a class="brand-link">
@@ -190,7 +190,7 @@
         <div class="content">
             <!-- 主页内容 -->
             <div class="embed-responsive embed-responsive-16by9">
-                <iframe id='main' class="embed-responsive-item" name="main" src="/html/OD.html"></iframe>
+                <iframe id='main' class="embed-responsive-item" name="main" src="/html/mainPage.html"></iframe>
             </div>
         </div>
     </div>

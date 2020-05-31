@@ -9,9 +9,10 @@
     <script type="text/javascript" src = "../js/jquerySession.js"></script>
     <script type="text/javascript" src = "../js/login.js"></script>
     <title>Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 <body>
-<div class="background_wrap">
+<div class="background_wrap" id="mainPage">
     <div class="header"></div>
     <div class="loginWrap">
         <div class="loginWd">
@@ -33,11 +34,11 @@
                     </div>
                     <div class="tab-content">
                         <div class="tab-pane active" id="user_tab">
-                            <input class="input" id="user_name" type="text" name="username"  placeholder="用户名" size="35" maxlength ="20" onfocus="user_name_recovery()" onblur="check_user_name()">
+                            <input class="input" id="user_name" v-model="name" type="text" name="username"  placeholder="用户名" size="35" maxlength ="20" onfocus="user_name_recovery()" onblur="check_user_name()">
                             <div id="user_tip" style="color:white; height: 30px;">请输入用户名!</div>
-                            <input class="input" type="password" id="user_password" name="password" placeholder="密码" size="35" maxlength = "24" onfocus="user_pwd_recovery()" onblur="check_user_pwd()">
+                            <input class="input" type="password" v-model="password" id="user_password" name="password" placeholder="密码" size="35" maxlength = "24" onfocus="user_pwd_recovery()" onblur="check_user_pwd()">
                             <div id="user_pwd_tip" style="color:white; height: 30px;">请输入密码!</div>
-                            <input id="user_login" onclick="user_login()" class="login" type="button" name="submit" value="登录">
+                            <input id="user_login" @click="login" class="login" type="button" name="submit" value="登录">
                         </div>
                     </div>
                     <div class="login_scan_footer">
@@ -51,10 +52,51 @@
 <div class="frame_foot_copyright">Copyright © 晓南湖畔敲代码</div>
 <script>
     $("body").keydown(function() {
-        if (event.keyCode == "13") {//keyCode=13是回车键
+        if (event.keyCode === "13") {//keyCode=13是回车键
             $('#user_login').click();
         }
     });
+
+    var app = new Vue({
+        el: '#mainPage',
+        data() {
+            return {
+                name:"",
+                password:""
+            }
+        },
+        methods: {
+            login(){
+                $.ajax({
+                    type:"GET",
+                    url:"/system/login",
+                    data:{
+                        name:this.name,
+                        password:this.password
+                    },
+                    dataType:"json",
+                    success:function(res){
+                        if(res.code==="200"){
+                            window.location.href = "/index1.html"
+                        } else {
+                            alert("登录失败！")
+                        }
+                    },
+                    error:function(res){
+                        // alert("请求的页面有错误");
+                    }
+                });
+            }
+        },
+        filters: {},
+        created() {
+        },
+        mounted() {
+        },
+        watch: {}
+    });
+
+
 </script>
 </body>
 </html>

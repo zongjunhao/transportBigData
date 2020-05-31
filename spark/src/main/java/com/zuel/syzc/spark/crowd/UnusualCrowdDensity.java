@@ -54,10 +54,10 @@ public class UnusualCrowdDensity {
         SparkConf sparkConf = new SparkConf().setMaster("local[*]").setAppName("analysis");
         SparkSession spark = SparkSession.builder().config(sparkConf).getOrCreate();
         UnusualCrowdDensity unusualCrowdDensity = new UnusualCrowdDensity(spark);
-        unusualCrowdDensity.computeHistoryPeople(null,null);
+//        unusualCrowdDensity.computeHistoryPeople(null,null);
 
 //        unusualCrowdDensity.computeHistoryPeople(spark,DateUtil.getTimestamp("2018-10-01 00:00:00.000"),DateUtil.getTimestamp("2018-10-03 23:00:00.000"),filledRdd);
-//        JavaRDD<Row> rowJavaRDD = unusualCrowdDensity.judgeAbnormalCell(DateUtil.getTimestamp("2018-10-03 23:00:00.000"),null);
+        JavaRDD<Row> rowJavaRDD = unusualCrowdDensity.judgeAbnormalCell(DateUtil.getTimestamp("2018-10-03 12:00:00.000"),null);
 //        rowJavaRDD.collect().forEach(System.out::println);
 //        unusualCrowdDensity.computeT(spark,DateUtil.getTimestamp("2018-10-03 20:00:00.000"));
     }

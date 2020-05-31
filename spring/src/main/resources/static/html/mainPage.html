@@ -36,55 +36,61 @@
 </head>
 <body>
 <div>
-    <h1>功能概览</h1>
-    <div class="row" style="margin: 0 100px">
-        <div class="col-md-4 ">
+    <h1 data-scroll-reveal="enter top">功能概览</h1>
+    <div class="row" style="margin: 0 100px" id="mainpage">
+        <div class="col-md-4 " data-scroll-reveal="enter left after 0.5s">
             <div class="info info-box mb-3">
                 <div class="info-box-content">
-                    <div class="row">
-                        <i class="fa fa-car fa-5x" aria-hidden="true" style="color: #007bff"></i>
+                    <div class="row" style="text-align: center;margin-top: 40px">
+                        <i class="fa fa-map-marker fa-5x"  style="width: 100%;text-align: center;color: #005abb"></i>
                     </div>
                     <div class="row">
                         <h2 class="text-center" style="width: 100%">出行驻留分析</h2>
                     </div>
-                    <div class="row">
-                        <p>两个部分</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>交通小区划分与小区OD分析</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>选定区域内人流量分析</p>
+                    <div class="row" style="width: 100%;margin: 10px auto;text-align: center">
+                        <label style="width: 100%;text-align: center">两大部分</label>
+                    </div>
+                    <div class="row" style="width: 100%;margin: 10px auto;text-align: center">
+                        <label style="width: 100%;text-align: center" @click="od"><i class="fa fa-hand-o-right" aria-hidden="true" style="margin-right: 1em"></i>小区划分与小区OD分析</label>
+                        <label style="width: 100%;text-align: center" @click="inout"><i class="fa fa-hand-o-right" aria-hidden="true" style="margin-right: 1em"></i>选定区域内人流量分析</label>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 ">
+        <div class="col-md-4 " data-scroll-reveal="enter bottom after 0.5s">
             <div class="info info-box mb-3">
                 <div class="info-box-content">
-                    <div class="row">
-                        <i class="fa fa-car fa-5x" aria-hidden="true" style="color: #007bff"></i>
+                    <div class="row" style="text-align: center;margin-top: 40px">
+                        <i class="fa fa-car fa-5x"  style="width: 100%;text-align: center;color: #005abb"></i>
                     </div>
                     <div class="row">
-                        <h2 class="text-center" style="width: 100%">出行驻留分析</h2>
+                        <h2 class="text-center" style="width: 100%">出行方式分析</h2>
                     </div>
-                    <div class="row">
-                        <p>两个部分</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>交通小区划分与小区OD分析</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>选定区域内人流量分析</p>
+                    <div class="row" style="width: 100%;margin: 10px auto;text-align: center">
+                        <label style="width: 100%;text-align: center">两大部分</label>
+                    </div>
+                    <div class="row" style="width: 100%;margin: 10px auto;text-align: center">
+                        <label style="width: 100%;text-align: center" @click="all"><i class="fa fa-hand-o-right" aria-hidden="true" style="margin-right: 1em"></i>整体出行方式综述</label>
+                        <label style="width: 100%;text-align: center" @click="user"><i class="fa fa-hand-o-right" aria-hidden="true" style="margin-right: 1em"></i>个人出行方式展示</label>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 ">
+        <div class="col-md-4 " data-scroll-reveal="enter right after 0.5s">
             <div class="info info-box mb-3">
                 <div class="info-box-content">
-                    <div class="row">
-                        <i class="fa fa-car fa-5x" aria-hidden="true" style="color: #007bff"></i>
+                    <div class="row" style="text-align: center;margin-top: 40px">
+                        <i class="fa fa-users fa-5x"  style="width: 100%;text-align: center;color: #005abb"></i>
                     </div>
                     <div class="row">
-                        <h2 class="text-center" style="width: 100%">出行驻留分析</h2>
+                        <h2 class="text-center" style="width: 100%">人群密度分析</h2>
                     </div>
-                    <div class="row">
-                        <p>两个部分</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>交通小区划分与小区OD分析</p>
-                        <p><i class="fa fa-hand-o-right" aria-hidden="true"></i>选定区域内人流量分析</p>
+                    <div class="row" style="width: 100%;margin: 10px auto;text-align: center">
+                        <label style="width: 100%;text-align: center">两大部分</label>
+                    </div>
+                    <div class="row" style="width: 100%;margin: 10px auto;text-align: center">
+                        <label style="width: 100%;text-align: center" @click="crowd"><i class="fa fa-hand-o-right" aria-hidden="true" style="margin-right: 1em"></i>人群密度热力图</label>
+                        <label style="width: 100%;text-align: center" @click="crowd"><i class="fa fa-hand-o-right" aria-hidden="true" style="margin-right: 1em"></i>异常聚集检测</label>
                     </div>
                 </div>
             </div>
@@ -93,6 +99,37 @@
 </div>
 </body>
 <script>
+    var app = new Vue({
+        el: '#mainpage',
+        data() {
+            return {}
+        },
+        methods: {
+            od(){
+                window.location.href = "OD.html"
+            },
+            inout(){
+                window.location.href = "choosePoint.html"
+            },
+            user(){
+                window.location.href = "trackUser.html"
+            },
+            all(){
+                window.location.href = "trackWayAll.html"
+            },
+            crowd(){
+                window.location.href = "crowd.html"
+            },
+
+        },
+        filters: {},
+        created() {
+        },
+        mounted() {
+            window.scrollReveal = new scrollReveal({ reset: true, move: '50px'});
+        },
+        watch: {}
+    });
 
 </script>
 </html>
