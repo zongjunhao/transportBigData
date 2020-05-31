@@ -12,6 +12,11 @@
     <script src="../plugins/select2/js/select2.full.min.js"></script>
     <link rel="stylesheet" href="/js/font-awesome.min.css">
     <style>
+        html,body,#mainpage{
+            /*width: 100%;*/
+            /*height: 100%;*/
+            background-color: whitesmoke;
+        }
         .info{
             height: 400px;
             margin: 30px;
@@ -31,6 +36,16 @@
             font-weight: bold;
             /*color: #fdf5f2;*/
             text-align: center;
+        }
+        html::-webkit-scrollbar {
+            display: none; /* Chrome Safari */
+        }
+
+        html {
+            scrollbar-width: none; /* firefox */
+            -ms-overflow-style: none; /* IE 10+ */
+            overflow-x: hidden;
+            overflow-y: auto;
         }
     </style>
 </head>

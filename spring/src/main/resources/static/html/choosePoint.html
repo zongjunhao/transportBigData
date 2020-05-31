@@ -29,6 +29,16 @@
         .left-margin{
             margin-left: 2em;
         }
+        html::-webkit-scrollbar {
+            display: none; /* Chrome Safari */
+        }
+
+        html {
+            scrollbar-width: none; /* firefox */
+            -ms-overflow-style: none; /* IE 10+ */
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
     </style>
     <title>圆的绘制和编辑</title>
     <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />

@@ -55,6 +55,16 @@
         .dowebok h1 { margin: 150px 0 50px; font-size: 60px; font-weight: 500; color: #fff; text-align: center;}
         .dowebok h2 { margin: 50px 0; font-size: 45px; font-weight: 500; color: #fdf5f2; text-align: center;}
         .dowebok h3 { margin: 40px auto; font-size: 35px; font-weight: 500; color: #fdf5f2; text-align: left;}
+        html::-webkit-scrollbar {
+            display: none; /* Chrome Safari */
+        }
+
+        html {
+            scrollbar-width: none; /* firefox */
+            -ms-overflow-style: none; /* IE 10+ */
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body class="dowebok">
