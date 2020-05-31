@@ -79,6 +79,14 @@
             overflow-y: auto;
         }
 
+        .taiwan{
+            border: solid 1px red;
+            color: red;
+            float: left;
+            width: 50px;
+            background-color: rgba(255,0,0,0.1)
+        }
+
     </style>
 </head>
 <body>
@@ -321,6 +329,7 @@
                     // e 的话就是一个对象 然后需要什么就 “e.参数” 形式 进行获取
                     console.log(e.params.data.id);
                     console.log("change zoneFlow！")
+                    draw_inout_map(e.params.data.id)
                     // that.zoneData(e.params.data.id)
                 })
                 // zoneselect.val(0).trigger("change");

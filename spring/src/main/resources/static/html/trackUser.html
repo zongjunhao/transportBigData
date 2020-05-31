@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css"/>
+<!--    <script src="/vendor/jquery/bootstrap.js"></script>-->
+<!--    <link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />-->
     <style>
         html,
         body,
@@ -29,14 +31,45 @@
             overflow-x: hidden;
             overflow-y: auto;
         }
+
+        .row{
+            display: flex;
+        }
+
+        .buttoms{
+            width: 10%;
+        }
+
+        .center{
+            width: 80%;
+        }
+
+        .title{
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-<h1>个人出行方式展示</h1>
-<div class="toolbox">
-    <h2 class="title"></h2>
-    <button class="previous"><</button>
-    <button class="next">></button>
+
+<div class="toolbox input-card" style="top: 2em;bottom: auto;right: 2em;width: 300px;">
+    <h1 style="text-align: center;margin-top: 5px;">个人出行方式展示</h1>
+
+    <div class="row">
+        <div class="buttoms">
+            <button class="previous btn" style="width: 25px;height: 25px; margin: auto;"><</button>
+        </div>
+        <div class="center">
+            <div class="title"></div>
+        </div>
+
+        <div class="buttoms">
+            <button class="next btn" style="width: 25px;height: 25px;margin: auto">></button>
+        </div>
+    </div>
+
+
 </div>
 <div id="container" class="container"></div>
 
